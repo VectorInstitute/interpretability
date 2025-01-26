@@ -75,6 +75,14 @@ def prototype_heatmap(xray_image,image_reps,prototype_rep):
         plt.savefig("prototype_heatmap.png")
         break
 
+def counterfactual_explanation(model, image):
+
+    explainer = CounterfactualExplainer(
+    model=model
+    )
+
+    explanations = explainer.explain(image)
+    explanations.ipython_plot(index=0) 
 
 
     
