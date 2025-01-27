@@ -39,4 +39,4 @@ def calculate_auroc(all_disease_probs, gt_diseases):
     # Compute the overall AUROC score
     overall_auroc = roc_auc_score(gt_diseases, all_disease_probs, average='macro')
 
-    return overall_auroc#, per_disease_auroc
+    return overall_auroc

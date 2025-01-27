@@ -127,12 +127,9 @@ class NeuralAdditiveModel(torch.nn.Module):
 
 
 def calculate_n_units(x_train, n_basis_functions, units_multiplier):
-    # print("eyyyy",x_train.shape)
-    # print(len(np.unique(x_train[:, 0])))
     num_unique_vals = [
         len(np.unique(x_train[:, i])) for i in range(x_train.shape[1])
     ]
-    # print("herrreeeeeeeeeeeee",num_unique_vals)
     return [
         min(n_basis_functions, i * units_multiplier) for i in num_unique_vals
     ]
@@ -156,7 +153,6 @@ class TabNet(nn.Module):
         self.fc5 = nn.Linear(64, 32)
         self.fc2 = nn.Linear(32, 16)
         self.fc3 = nn.Linear(16, 1)
-        # self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.SA(x)
@@ -179,13 +175,10 @@ class SelfAttention(nn.Module): # Parts of this class were extracted from: https
 
         # Define the key, query, and value linear transformations
 
-        # self.embed_size = embed_size
-        # self.heads = heads
-        # self.head_dim = embed_size // heads
         self.embed_size = in_channels
-        self.key_conv = nn.Linear(in_channels, in_channels, bias=False)#, kernel_size=1)
-        self.query_conv = nn.Linear(in_channels, in_channels, bias=False)#, kernel_size=1)
-        self.value_conv = nn.Linear(in_channels, in_channels, bias=False)#, kernel_size=1)
+        self.key_conv = nn.Linear(in_channels, in_channels, bias=False)
+        self.query_conv = nn.Linear(in_channels, in_channels, bias=False)
+        self.value_conv = nn.Linear(in_channels, in_channels, bias=False)
         self.gamma = nn.Parameter(torch.zeros(1))
         # Attention softmax
         self.softmax = nn.Softmax(dim=-1)
@@ -196,26 +189,21 @@ class SelfAttention(nn.Module): # Parts of this class were extracted from: https
        
         N = x.shape[0]
         value_len = x.shape[1]
-        # print("xxxx",x.shape)
-        # values = values.reshape(N, value_len, self.heads, self.head_dim)
         
         key = self.key_conv(x)
-        # key = self.dropout(key)
         
         query = self.query_conv(x)
-        # query = self.dropout(query)
+       
         
         value = self.value_conv(x)
-        # value = self.dropout(value)
         
-        print("sizeee", x.size(),key.shape)
-        # batch_size, ,  = x.size()
+    
 
-        query = query.view(batch_size, channels,-1)#,depth, -1)
+        query = query.view(batch_size, channels,-1)
         
-        key = key.view(batch_size, channels,-1)#,depth, -1)
+        key = key.view(batch_size, channels,-1)
         
-        value = value.reshape(batch_size, channels,-1)#*depth, -1)
+        value = value.reshape(batch_size, channels,-1)
         
         
         attention = torch.bmm(query.permute(0, 2, 1), key)
@@ -224,10 +212,8 @@ class SelfAttention(nn.Module): # Parts of this class were extracted from: https
 
         
         out = torch.bmm(value, attention.permute(0, 2, 1))
-
-        # print("selfffffffffff",out.shape)
         
-        out = out.view(batch_size, channels,height, width, depth)#  depth,height, width).permute(0,1,3,4,2)
+        out = out.view(batch_size, channels,height, width, depth)
 
         
         temp = out
@@ -322,7 +308,6 @@ class Preprocessor(nn.Module):
     def __init__(self, numerical_columns, categorical_columns, encoder_categories, emb_dim):
         super().__init__()
         self.numerical_columns = numerical_columns
-        print("nummm",numerical_columns)
         self.numerical_columns.remove("readmitted_binarized")
         self.categorical_columns = categorical_columns
         self.encoder_categories = encoder_categories
@@ -441,7 +426,6 @@ class TabTransformer(nn.Module):
             
         mlp_output = self.mlp(features)
         model_output = self.final_dense(mlp_output)
-        # output = self.final_sigmoid(model_output)
         return model_output
 
 
@@ -465,6 +449,7 @@ class Model(torch.nn.Module):
     @property
     def name(self):
         return self._name
+
 
 
 class ExU(torch.nn.Module):

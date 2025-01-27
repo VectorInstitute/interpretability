@@ -17,9 +17,6 @@ def process_csv(df):
     
     
     df["readmitted_binarized"] = df["readmitted"].apply(lambda x: 1 if x=="b'<30'" else 0)
-    #remove columns
-    # print("df",df["readmitted"].unique())
-    # print("uniquuuu",df["readmitted_binarized"].unique())
     df = df.drop(['Unnamed: 0',"encounter_id","patient_nbr","examide", "readmitted","weight","payer_code","medical_specialty"], axis=1) #"citoglipton","readmitted","weight","payer_code","medical_specialty"], axis=1)  #discharge????
 
 
@@ -40,67 +37,15 @@ def process_csv(df):
     df["diag_1"] = df["diag_1"].apply(lambda x: x[:x.find(".")])
     df["diag_2"] = df["diag_2"].apply(lambda x: x[:x.find(".")])
     df["diag_3"] = df["diag_3"].apply(lambda x: x[:x.find(".")])
-    # df['discharge_disposition_id'] = df['discharge_disposition_id'].apply(lambda x : 1 if int(x) in [6, 8, 9, 13] 
-    #                                                                        else ( 2 if int(x) in [3, 4, 5, 14, 22, 23, 24]
-    #                                                                        else ( 10 if int(x) in [12, 15, 16, 17]
-    #                                                                        else ( 11 if int(x) in [19, 20, 21]
-    #                                                                        else ( 18 if int(x) in [25, 26] 
-    #                                                                        else int(x) )))))
-
-    # df = df[~df.discharge_disposition_id.isin([11,13,14,19,20,21])]
-
-    # df['admission_type_id'] =df['admission_type_id'].apply(lambda x : 1 if int(x) in [2, 7]
-    #                                                             else ( 5 if int(x) in [6, 8]
-    #                                                             else int(x) ))
-
-    # df['admission_source_id'] = df['admission_source_id'].apply(lambda x : 1 if int(x) in [2, 3]
-    #                                                             else ( 4 if int(x) in [5, 6, 10, 22, 25]
-    #                                                             else ( 9 if int(x) in [15, 17, 20, 21]
-    #                                                             else ( 11 if int(x) in [13, 14]
-    #                                                             else int(x) ))))
-
-    # for col in ["metformin", "repaglinide", "nateglinide", "chlorpropamide", "glimepiride", "acetohexamide", "glipizide", "glyburide", "tolbutamide", "pioglitazone", "rosiglitazone", "acarbose", "miglitol", "troglitazone", "tolazamide", "citoglipton", "insulin", "glyburide.metformin", "glipizide.metformin", "glimepiride.pioglitazone", "metformin.rosiglitazone", "metformin.pioglitazone"]: #EXAMIDE
-    #     df[col] = df[col].apply(lambda x : 10 if x == 'Up' 
-    #                                               else ( -10 if x == 'Down'                                                          
-    #                                               else ( 0 if x == 'Steady'
-    #                                               else  -20)))
-
-
-    # # df['change'] = df['change'].apply(lambda x : 1 if x == 'Ch'
-    # #                                                 else -1)
-
-
-    # df['diabetesMed'] = df['diabetesMed'].apply(lambda x : -1 if x == 'No'
-    #                                                 else 1)
-
-
-    # df['max_glu_serum'] = df['max_glu_serum'].apply(lambda x : 200 if x == '>200' 
-    #                                                             else ( 300 if x == '>300'                                                          
-    #                                                             else ( 100 if x == 'Norm'
-    #                                                             else  0)))
-
-    # df['A1Cresult'] = df['A1Cresult'].apply(lambda x : 7 if x == '>7' 
-    #                                                         else (8 if  x == '>8'                                                        
-    #                                                         else ( 5 if x == 'Norm'
-    #                                                         else  0)))
-    # print(df["readmitted_binarized"].value_counts(normalize=True))  
+      
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
-    print("cattt",categorical_columns)
     # https://www.kaggle.com/code/paulo100/tabtransformer-pytorch-dnn-with-attention-eda
-    # categorical_n_unique = {cc: train_df[cc].nunique() \
-    #                     for cc in categorical_columns}
+    
     for cat_column in categorical_columns:
       frequency_encoding = df[cat_column].value_counts(normalize=True).to_dict()
       df[f"encoded_{cat_column}"] = df[cat_column].map(frequency_encoding)
       df = df.drop(cat_column, axis=1)
 
-    # # print("catttt",categorical_columns)
-    
-    # df_encoded = pd.get_dummies(df, columns=categorical_columns, dtype=float)
-    # print("first_df",df.dtypes)
-    # duplicate_rows = df[df.duplicated()]
-    # print("duplicate",duplicate_rows.shape[0]) 
-    print("dfffffffff",df.shape)
     
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
     numerical_columns = [col for col in df.columns if col not in categorical_columns]  
@@ -138,81 +83,12 @@ def process_csv_transformer(df):
     df["diag_3"] = df["diag_3"].apply(lambda x: x[:x.find(".")])
     df.columns = [col.replace('.', '') for col in df.columns]
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
-    print("cattt",categorical_columns)
     # https://www.kaggle.com/code/paulo100/tabtransformer-pytorch-dnn-with-attention-eda
-    # categorical_n_unique = {cc: train_df[cc].nunique() \
-    #                     for cc in categorical_columns}
-   
-
-    # # print("catttt",categorical_columns)
-    
-    # df_encoded = pd.get_dummies(df, columns=categorical_columns, dtype=float)
-    # print("first_df",df.dtypes)
-    # duplicate_rows = df[df.duplicated()]
-    # print("duplicate",duplicate_rows.shape[0]) 
-    print("dfffffffff",df.shape)
-    
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
     numerical_columns = [col for col in df.columns if col not in categorical_columns]  
-    # preprocessor = Preprocessor(numerical_columns,
-    #                             categorical_columns,
-    #                             encoder_categories,
-    #                             emb_dim=3)
-    # x_nums, x_cats = preprocessor(sample_data)
     return df, numerical_columns, categorical_columns
 
-# def process_csv_transformer(df):
-    
-    
-#     df["readmitted_binarized"] = df["readmitted"].apply(lambda x: 1 if x=="b'<30'" else 0)
-#     #remove columns
-#     # print("df",df["readmitted"].unique())
-#     # print("uniquuuu",df["readmitted_binarized"].unique())
-#     df = df.drop(['Unnamed: 0',"encounter_id","patient_nbr","examide", "readmitted","weight","payer_code","medical_specialty"], axis=1) #"citoglipton","readmitted","weight","payer_code","medical_specialty"], axis=1)  #discharge????
 
-
-#     # # age transformation was extracted from: https://medium.com/analytics-vidhya/diabetes-130-us-hospitals-for-years-1999-2008-e18d69beea4d
-#     age_dic = {"b'[0-10)'" : 5,
-#     "b'[10-20)'" : 15,
-#     "b'[20-30)'" : 25, 
-#     "b'[30-40)'" : 35, 
-#     "b'[40-50)'" : 45, 
-#     "b'[50-60)'" : 55,
-#     "b'[60-70)'" : 65, 
-#     "b'[70-80)'" : 75,
-#     "b'[80-90)'" : 85,
-#     "b'[90-100)'" : 95}
-    
-#     df['age'] = df['age'].apply(lambda x : age_dic[x])
-    
-#     df["diag_1"] = df["diag_1"].apply(lambda x: x[:x.find(".")])
-#     df["diag_2"] = df["diag_2"].apply(lambda x: x[:x.find(".")])
-#     df["diag_3"] = df["diag_3"].apply(lambda x: x[:x.find(".")])
-     
-#     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
-    
-#     # https://www.kaggle.com/code/paulo100/tabtransformer-pytorch-dnn-with-attention-eda
-#     # categorical_n_unique = {cc: train_df[cc].nunique() \
-#     #                     for cc in categorical_columns}
-    
-#     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
-#     numerical_columns = [col for col in df.columns if col not in categorical_columns]  
-#     oe = OrdinalEncoder(handle_unknown='error',
-#                     dtype=np.int64)
-#     encoded = oe.fit_transform(train_fold[categorical_columns].values)
-#     #decoded = oe.inverse_transform(encoded)
-#     train_fold[categorical_columns] = encoded
-
-#     valid_fold[categorical_columns] = oe.transform(valid_fold[categorical_columns].values)
-#     train[categorical_columns] = oe.transform(train[categorical_columns].values)
-#     test[categorical_columns] = oe.transform(test[categorical_columns].values)
-
-#     preprocessor = Preprocessor(numerical_columns,
-#                                 categorical_columns,
-#                                 encoder_categories,
-#                                 emb_dim=3)
-#     x_nums, x_cats = preprocessor(sample_data)
-#     return df
 
 class dfDataset(Dataset):
     def __init__(self, df):
@@ -345,12 +221,10 @@ def transform_data(df):
       identity `FunctionTransformer` for numerical variables. This is followed by
       scaling all features to the range (-1, 1) using min-max scaling.
     """
-    # print("head",df.columns)
     column_names = df.columns
     new_column_names = []
     is_categorical = np.array([dt.kind == 'O' for dt in df.dtypes])
     categorical_cols = df.columns.values[is_categorical]
-    # print("catt",categorical_cols)
     numerical_cols = df.columns.values[~is_categorical]
     for index, is_cat in enumerate(is_categorical):
         col_name = column_names[index]
@@ -382,10 +256,8 @@ def create_test_train_fold(
         regression: bool = False,
 ):
     """Splits the dataset into training and held-out test set."""
-    # data_x, data_y= dataset.drop(["readmitted_binarized"],axis=1).copy(), dataset["readmitted_binarized"].copy()
-    # print("isnaaa",dataset.isnull().sum())
+    
     data_x, data_y = dataset.loc[:, dataset.columns != "readmitted_binarized"], dataset.loc[:, dataset.columns == "readmitted_binarized"]
-    # print("dataaa_x",data_x.head(),data_y.head())
     data_x, column_names = transform_data(data_x)
     data_x = data_x.astype('float32')
     

@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from transformers import AutoModel, AutoTokenizer
-
+import numpy as np
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, attention=False):
@@ -65,35 +65,6 @@ class SelfAttention(nn.Module):
         return out, attention
 
 # ResNet with Self-Attention
-
-class ResNetAttention(nn.Module):
-    def __init__(self, num_classes=10):
-        super(ResNetAttention, self).__init__()
-
-        self.layer1 = self._make_layer(ResidualBlock, 3, 64, stride=2, attention=False)
-        self.layer2 = self._make_layer(ResidualBlock, 64, 128, stride=2, attention=False)
-        self.layer3 = self._make_layer(ResidualBlock, 128, 256, stride=2, attention=True)
-        self.fc = nn.Linear(256, num_classes) # 512
-
-    def _make_layer(self, block, in_channels, out_channels, stride, attention):
-        return nn.Sequential(
-            block(in_channels, out_channels, stride=stride, attention=attention),
-            block(out_channels, out_channels, stride=1, attention=attention)
-        )
-
-    def forward(self, x):
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = F.adaptive_avg_pool2d(x, (1, 1))
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-        
-        return x
-    
-
-
-
 class ResNetAttention(nn.Module):
     def __init__(self, original_model,num_classes=15):
         super(ResNetAttention, self).__init__()
