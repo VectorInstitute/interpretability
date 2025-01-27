@@ -59,8 +59,8 @@ def prototypical_loss(original_image,inputs, target, n_support):
     validation_estimated = []
     validation_true = []
 
-    target_cpu = target#.to('cpu')
-    input_cpu = inputs#.to('cpu')
+    target_cpu = target
+    input_cpu = inputs
 
     # Find active classes in the batch
     active_classes = torch.nonzero(target_cpu.sum(0)).squeeze(1)
@@ -85,7 +85,7 @@ def prototypical_loss(original_image,inputs, target, n_support):
             class_prototype = input_cpu[support_idxs].mean(0)
             prototypes.append(class_prototype)
         else:
-            print("THEEEEEERREEEEEE")
+            print("No support samples for class {}".format(c))
         # Add query indices
         query_idxs.extend(query_idxs_c.tolist())
     
@@ -114,12 +114,12 @@ def prototypical_loss(original_image,inputs, target, n_support):
     loss_val = F.binary_cross_entropy_with_logits(-dists, query_targets.float())
     # Multi-label accuracy
     preds = (log_p_y > 0).float()  # Threshold at 0
-    # acc_val = (preds == query_targets).float().mean()
+    
     
     # Compute AUC
     validation_estimated = torch.exp(log_p_y).detach().cpu().numpy()
     validation_true = query_targets.detach().cpu().numpy()
     
-    acc_val = get_roc_auc_score(validation_true, validation_estimated)
+    auc_val = get_roc_auc_score(validation_true, validation_estimated)
 
-    return loss_val, acc_val,query_targets,torch.exp(log_p_y)
+    return loss_val, auc_val,query_targets,torch.exp(log_p_y)

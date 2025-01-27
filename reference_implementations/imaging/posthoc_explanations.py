@@ -24,8 +24,7 @@ def smoothgrad(model,input,pred):
     ig = IntegratedGradients(model)
     nt = NoiseTunnel(ig)
     attr = nt.attribute(input, nt_type='smoothgrad',nt_samples=10, target=pred)
-    print("ssss",attr.shape)
-    # upsampled_attr = LayerAttribution.interpolate(attr, (124, 124)) # projet back to original image size
+   
     return attr
 
 def shapely(model,input,pred):
@@ -40,8 +39,7 @@ def shapely(model,input,pred):
             feature_mask[0, i:i+4, j:j+4] = group_id
             group_id += 1
     attr = sv.attribute(input, target=pred, feature_mask=feature_mask)
-    print("ssss",attr.shape)
-    # upsampled_attr = LayerAttribution.interpolate(attr, (124, 124)) # projet back to original image size
+    
     return attr
 
 

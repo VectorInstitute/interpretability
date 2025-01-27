@@ -15,41 +15,11 @@ from pathlib import Path
 import pickle
 from utils.zeroshot_utils import calculate_auroc
 
-def make_parser():
-    parser = argparse.ArgumentParser(description='Zero-shot Classification (concept-based explainability)')
 
-    # Data
-    # parser.add_argument('--data_path', type=str, default='resources/master_sheet.csv', help='Data path')
-    # parser.add_argument('--image_path', type=str, default='/data/MIMIC/MIMIC-IV/cxr_v2/physionet.org/files/mimic-cxr/2.0.0', help='image_path')
-    
-    parser.add_argument('--output_dir', type=str, default='results', help='Output directory')
-    parser.add_argument('--class_names', type=list, default=['Normal', 'CHF', 'pneumonia'], help='Label names for classification')
-    parser.add_argument('--num_workers', type=int, default=4, help='number of workers')
-    parser.add_argument('--resize', type=int, default=224, help='Resizing images')
-
-    # Training
-    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
-    parser.add_argument('--epochs', type=int, default=20, help='number of epochs')
-    parser.add_argument('--lr', type=float, default=1e-3, help='initial learning rate')
-    parser.add_argument('--scheduler', default=False, action='store_true', help='[USE] scheduler')
-    parser.add_argument('--step_size', type=int, default=5, help='scheduler step size')
-
-   
-
-    # Misc
-    parser.add_argument('--gpus', type=str, default='7', help='Which gpus to use, -1 for CPU')
-    parser.add_argument('--viz', default=False, action='store_true', help='[USE] Vizdom')
-    parser.add_argument('--gcam_viz', default=False, action='store_true', help='[USE] Used for displaying the GradCam results')
-    parser.add_argument('--test', default=False, action='store_true', help='[USE] flag for testing only')
-    parser.add_argument('--testdir', type=str, default=None, help='model to test [same as train if not set]')
-    parser.add_argument('--rseed', type=int, default=42, help='Seed for reproducibility')
-    parser.add_argument('--weight_decay', type=int, default=1e-3, help='Seed for reproducibility')
-    parser.add_argument('--num_epochs', type=int, default=20, help='Seed for reproducibility')
-    return parser
 
 def zeroshot(test_ds):
 
-    dataloader = DataLoader(test_ds, batch_size=1, shuffle=False)#, collate_fn=lambda x: x, num_workers=0)
+    dataloader = DataLoader(test_ds, batch_size=1, shuffle=False)
     inference_model = InferenceModel()
     all_descriptors = inference_model.get_all_descriptors(class_prompts)
 
@@ -105,10 +75,6 @@ def zeroshot(test_ds):
 
 
 if __name__ == '__main__':
-    # add argument parser
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='chexpert', help='chexpert or chestxray14')
-    args = parser.parse_args()
 
     image_path = "/datasets/nih-chest-xrays"    
     csv_file = pd.read_csv(os.path.join(image_path,"Data_Entry_2017.csv"))

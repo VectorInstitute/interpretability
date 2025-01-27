@@ -14,7 +14,7 @@ def visualize_trainable_attention(attention_weights, image,label,pred):
     attention_weights.mean(0).view(7,7).unsqueeze(0).unsqueeze(0).clamp(0, 1),  # Add batch and channel dims
     size=(224, 224),
     mode='bilinear',
-    align_corners=False)#.squeeze() 
+    align_corners=False) 
     
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
