@@ -36,31 +36,6 @@ class ActivationLayer(torch.nn.Module):
         raise NotImplementedError("abstract method called")
 
 
-class ExULayer(ActivationLayer):
-    def __init__(self,
-                 in_features: int,
-                 out_features: int):
-        super().__init__(in_features, out_features)
-        truncated_normal_(self.weight, mean=4.0, std=0.5)
-        truncated_normal_(self.bias, std=0.5)
-
-    def forward(self, x):
-        exu = (x - self.bias) @ torch.exp(self.weight)
-        return torch.clip(exu, 0, 1)
-
-
-class ReLULayer(ActivationLayer):
-    def __init__(self,
-                 in_features: int,
-                 out_features: int):
-        super().__init__(in_features, out_features)
-        torch.nn.init.xavier_uniform_(self.weight)
-        truncated_normal_(self.bias, std=0.5)
-
-    def forward(self, x):
-        return F.relu((x - self.bias) @ self.weight)
-
-
 class FeatureNN(torch.nn.Module):
     def __init__(self,
                  shallow_units: int,
