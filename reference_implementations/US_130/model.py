@@ -36,6 +36,27 @@ class ActivationLayer(torch.nn.Module):
         raise NotImplementedError("abstract method called")
 
 
+class ExULayer(ActivationLayer):
+    def __init__(self,
+                 in_features: int,
+                 out_features: int):
+        super().__init__(in_features, out_features)
+        truncated_normal_(self.weight, mean=4.0, std=0.5)
+        truncated_normal_(self.bias, std=0.5)
+    def forward(self, x):
+        exu = (x - self.bias) @ torch.exp(self.weight)
+        return torch.clip(exu, 0, 1)
+        
+class ReLULayer(ActivationLayer):
+    def __init__(self,
+                 in_features: int,
+                 out_features: int):
+        super().__init__(in_features, out_features)
+        torch.nn.init.xavier_uniform_(self.weight)
+        truncated_normal_(self.bias, std=0.5)
+    def forward(self, x):
+        return F.relu((x - self.bias) @ self.weight)
+        
 class FeatureNN(torch.nn.Module):
     def __init__(self,
                  shallow_units: int,
@@ -117,29 +138,9 @@ def calculate_n_units(x_train, n_basis_functions, units_multiplier):
     ]
 
 
-class ExULayer(ActivationLayer):
-    def __init__(self,
-                 in_features: int,
-                 out_features: int):
-        super().__init__(in_features, out_features)
-        truncated_normal_(self.weight, mean=4.0, std=0.5)
-        truncated_normal_(self.bias, std=0.5)
-
-    def forward(self, x):
-        exu = (x - self.bias) @ torch.exp(self.weight)
-        return torch.clip(exu, 0, 1)
 
 
-class ReLULayer(ActivationLayer):
-    def __init__(self,
-                 in_features: int,
-                 out_features: int):
-        super().__init__(in_features, out_features)
-        torch.nn.init.xavier_uniform_(self.weight)
-        truncated_normal_(self.bias, std=0.5)
 
-    def forward(self, x):
-        return F.relu((x - self.bias) @ self.weight)
 
 
 
@@ -465,58 +466,6 @@ class Model(torch.nn.Module):
     def name(self):
         return self._name
 
-class FeatureNN(Model):
-    """Neural Network model for each individual feature."""
-
-    def __init__(
-        self,
-        config,
-        name,
-        *,
-        input_shape: int,
-        num_units: int,
-        feature_num: int = 0,
-    ) -> None:
-        """Initializes FeatureNN hyperparameters.
-
-        Args:
-          num_units: Number of hidden units in first hidden layer.
-          dropout: Coefficient for dropout regularization.
-          feature_num: Feature Index used for naming the hidden layers.
-        """
-        super(FeatureNN, self).__init__(config, name)
-        self._input_shape = input_shape
-        self._num_units = num_units
-        self._feature_num = feature_num
-        self.dropout = nn.Dropout(p=self.config.dropout)
-
-        hidden_sizes = [self._num_units] + self.config.hidden_sizes
-
-        layers = []
-
-        ## First layer is ExU
-        if self.config.activation == "exu":
-            layers.append(ExU(in_features=input_shape, out_features=num_units))
-        else:
-            layers.append(LinReLU(in_features=input_shape, out_features=num_units))
-
-        ## Hidden Layers
-        for in_features, out_features in zip(hidden_sizes, hidden_sizes[1:]):
-            layers.append(LinReLU(in_features, out_features))
-
-        ## Last Linear Layer
-        layers.append(nn.Linear(in_features=hidden_sizes[-1], out_features=1))
-
-        self.model = nn.ModuleList(layers)
-        # self.apply(init_weights)
-
-    def forward(self, inputs) -> torch.Tensor:
-        """Computes FeatureNN output with either evaluation or training
-        mode."""
-        outputs = inputs.unsqueeze(1)
-        for layer in self.model:
-            outputs = self.dropout(layer(outputs))
-        return outputs
 
 class ExU(torch.nn.Module):
 
