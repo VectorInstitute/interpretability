@@ -1,10 +1,7 @@
-# Bootcamp Repository Template
+# Interpretable and Explainable AI Bootcamp
 
-This repository serves as the template sharing materials related bootcamps, workshops, or labs.
+This is the official repository for the 2025 Bootcamp on Interpretable and Explainable AI by Vector Institute.
 
-## About [Bootcamp Name]
-
-*Add info on the bootcamp.*
 
 ## Repository Structure
 
@@ -21,8 +18,20 @@ This repository serves as the template sharing materials related bootcamps, work
 Each topic within the [choice of bootcamp/lab/workshop] has a dedicated directory in the `reference_implementations/` directory. In each directory, there is a README file that provides an overview of the topic, prerequisites, and notebook descriptions.
 
 Here is the list of the covered topics:
-- [Reference Implementation 1]
-- [Reference Implementation 2]
+- Post-hoc Explainability Methods
+    - LIME
+    - SHAP
+    - PDP
+    - ALE
+    - Integrated Gradients
+    
+
+- Interpretable-models
+    - GAM
+    - NAM
+    - EBM
+    - ProtoPNet
+    - B-COS Networks
 
 ## Getting Started
 
@@ -41,4 +50,4 @@ To get started with contributing to our project, please read our [CONTRIBUTING.m
 
 ## Contact Information
 
-For more information or help with navigating this repository, please contact [Vector AI ENG Team/Individual] at [Contact Email].
+For more information or help with navigating this repository, please contact Dhanesh Ramachandram, Applied ML Scientist, Health Lead at [dhanesh.ramachandram@vectorinstitute.ai] or Ananya Raval, Software Developer, AI Eng. [ananya.raval@vectorinstitute.ai]
