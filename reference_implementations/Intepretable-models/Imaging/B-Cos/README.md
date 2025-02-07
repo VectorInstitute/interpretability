@@ -14,11 +14,11 @@
 
 2. [Training Ground Truth Labels](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Training_GroundTruth.csv): 900 entries of gold standard malignant status labels.
 
-3.[Test dataset](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Test_Data.zip): 379 images of the exact same format as the Training Data.
+3. [Test dataset](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Test_Data.zip): 379 images of the exact same format as the Training Data.
 
-4.[Test Set Ground Truth Labels](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Test_GroundTruth.csv): 379 entries of gold standard malignant status labels.
+4. [Test Set Ground Truth Labels](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Test_GroundTruth.csv): 379 entries of gold standard malignant status labels.
 
 
-If you use this dataset, please cite:
+- If you use this dataset, please cite:
 
 Gutman, David; Codella, Noel C. F.; Celebi, Emre; Helba, Brian; Marchetti, Michael; Mishra, Nabin; Halpern, Allan. "Skin Lesion Analysis toward Melanoma Detection: A Challenge at the International Symposium on Biomedical Imaging (ISBI) 2016, hosted by the International Skin Imaging Collaboration (ISIC)". eprint arXiv:1605.01397. 2016.
