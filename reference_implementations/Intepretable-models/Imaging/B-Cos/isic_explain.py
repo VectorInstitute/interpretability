@@ -47,6 +47,16 @@ def load_fine_tuned_model(model_path="model/finetuned_weights/fine_tuned_isic_bc
 # 2. Load Test Dataset
 # -----------------------------------------------------------------------------
 def get_test_dataset():
+    """
+    Loads and returns the test dataset for the ISIC 2016 challenge.
+
+    The dataset is loaded from a specified directory and CSV file, and 
+    transformations are applied to the images including resizing, 
+    normalization, and conversion to tensor format.
+
+    Returns:
+        ISICDataset: A dataset object containing the test images and labels.
+    """
     test_root = "/home/dhaneshr/datasets/ISIC_2016/test_set"
     test_csv = os.path.join(test_root, "test_gt.csv")
 
@@ -63,14 +73,45 @@ def get_test_dataset():
 # -----------------------------------------------------------------------------
 # Unnormalize function (inverse of normalization)
 def denormalize(tensor, mean, std):
+    """
+    Reverse the normalization of a tensor.
+
+    Args:
+        tensor (torch.Tensor): The normalized tensor to be denormalized.
+        mean (list or tuple): The mean values used for normalization.
+        std (list or tuple): The standard deviation values used for normalization.
+
+    Returns:
+        torch.Tensor: The denormalized tensor.
+    """
     mean = torch.tensor(mean).view(3, 1, 1)
     std = torch.tensor(std).view(3, 1, 1)
     return tensor * std + mean  # Reverse normalization
 
 def visualize_explanations(model, dataset, num_images=6):
     """
-    Selects `num_images` random samples from the dataset and visualizes their explanations.
+    Visualizes explanations for a given model and dataset.
+    Parameters:
+    model (torch.nn.Module): The model to be explained.
+    dataset (torch.utils.data.Dataset): The dataset containing images and labels.
+    num_images (int, optional): The number of images to visualize. Default is 6.
+    Returns:
+    None: This function saves the visualization as 'isic_explanations.png'.
+    
+    The function performs the following steps:
+    1. Moves the model to the appropriate device (GPU if available, otherwise CPU).
+    2. Selects random indices from the dataset.
+    3. Creates a subplot for each image and its corresponding explanation.
+    4. For each selected image:
+        a. Retrieves the image and label from the dataset.
+        b. Moves the image to the appropriate device and ensures it requires gradients.
+        c. Obtains the model's explanation for the image.
+        d. Denormalizes the image for visualization.
+        e. Converts the image to a NumPy array for plotting.
+        f. Plots the original image and its explanation side by side.
+    5. Adjusts the layout and saves the figure as 'isic_explanations.png'.
     """
+   
     model = model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # Select random indices
