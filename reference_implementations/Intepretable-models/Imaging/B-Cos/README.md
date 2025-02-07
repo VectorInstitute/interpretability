@@ -5,3 +5,20 @@
 
 - Execute `isic_finetune.py` to load the pretrained resnet(bcos) network and fine-tune it.
 - Execute `isic_explanations` to visualize the predictions mage by the fine-tuned network.
+
+
+- The dataset can be downloaded from the [ISIC 2016 Challenge website](https://challenge.isic-archive.com/data/). 
+- Specifically, we shall use the dataset and ground truths for Task 3 - Skin Lesion Classification Challenge.
+
+1. [Training dataset](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Training_Data.zip): 900 dermoscopic lesion images in JPEG format.
+
+2. [Training Ground Truth Labels](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Training_GroundTruth.csv): 900 entries of gold standard malignant status labels.
+
+3.[Test dataset](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Test_Data.zip): 379 images of the exact same format as the Training Data.
+
+4.[Test Set Ground Truth Labels](https://isic-challenge-data.s3.amazonaws.com/2016/ISBI2016_ISIC_Part3_Test_GroundTruth.csv): 379 entries of gold standard malignant status labels.
+
+
+If you use this dataset, please cite:
+
+Gutman, David; Codella, Noel C. F.; Celebi, Emre; Helba, Brian; Marchetti, Michael; Mishra, Nabin; Halpern, Allan. "Skin Lesion Analysis toward Melanoma Detection: A Challenge at the International Symposium on Biomedical Imaging (ISBI) 2016, hosted by the International Skin Imaging Collaboration (ISIC)". eprint arXiv:1605.01397. 2016.
