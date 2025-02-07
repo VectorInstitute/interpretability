@@ -8,10 +8,34 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
 
+# Define constants
+MODEL_SAVE_PATH = "model/finetuned_weights/fine_tuned_isic_bcos_resnet50.pth"
+
 # -----------------------------------------------------------------------------
 # 1. Define a Custom Dataset for ISIC 2016 with 6-Channel Inputs
 # -----------------------------------------------------------------------------
 class ISICDataset(Dataset):
+    """
+    A custom dataset class for the ISIC skin lesion dataset.
+
+    Args:
+        root_dir (str): Directory with all the images.
+        csv_file (str): Path to the CSV file with image names and labels.
+        transform (callable, optional): Optional transform to be applied on a sample.
+        extension (str, optional): File extension of the images. Default is ".jpg".
+
+    Attributes:
+        root_dir (str): Directory with all the images.
+        csv_file (str): Path to the CSV file with image names and labels.
+        transform (callable, optional): Optional transform to be applied on a sample.
+        extension (str): File extension of the images.
+        samples (list): List of tuples containing image names and labels.
+        label_to_index (dict): Dictionary mapping label names to integer indices.
+
+    Methods:
+        __len__(): Returns the number of samples in the dataset.
+        __getitem__(idx): Returns the sample (image and label) at the given index.
+    """
     def __init__(self, root_dir: str, csv_file: str, transform=None, extension=".jpg"):
         self.root_dir = root_dir
         self.csv_file = csv_file
@@ -131,6 +155,16 @@ def get_optimizer(model: nn.Module, learning_rate: float, freeze_features: bool)
 # 3. Create Data Loaders
 # -----------------------------------------------------------------------------
 def get_dataloaders(batch_size: int = 32):
+    """
+        Returns the training and test data loaders.
+        
+        Args:
+            batch_size (int): The batch size for the data loaders.
+        
+        Returns:
+            train_loader (torch.utils.data.DataLoader): DataLoader for the training set.
+            test_loader (torch.utils.data.DataLoader): DataLoader for the test set.
+    """
     # Define the dataset directories and CSV files.
     train_root = "/home/dhaneshr/datasets/ISIC_2016/train_set"
     test_root = "/home/dhaneshr/datasets/ISIC_2016/test_set"
@@ -165,7 +199,7 @@ def get_dataloaders(batch_size: int = 32):
 # -----------------------------------------------------------------------------
 
 
-def early_stopping(patience: int, best_loss: float, current_loss: float, counter: int):
+def check_early_stopping(patience: int, best_loss: float, current_loss: float, counter: int):
     if current_loss < best_loss:
         best_loss = current_loss
         counter = 0
@@ -177,6 +211,20 @@ def early_stopping(patience: int, best_loss: float, current_loss: float, counter
     return False, best_loss, counter
 
 def train_one_epoch(model: nn.Module, dataloader: DataLoader, criterion, optimizer, device: torch.device):
+    """
+    Trains the model for one epoch.
+    
+    Args:
+        model (torch.nn.Module): The model to train.
+        train_loader (torch.utils.data.DataLoader): DataLoader for the training set.
+        criterion (torch.nn.Module): The loss function.
+        optimizer (torch.optim.Optimizer): The optimizer.
+        device (torch.device): The device to train on.
+    
+    Returns:
+        train_loss (float): The training loss for the epoch.
+        train_acc (float): The training accuracy for the epoch.
+    """
     model.train()
     running_loss = 0.0
     correct = 0
@@ -199,7 +247,25 @@ def train_one_epoch(model: nn.Module, dataloader: DataLoader, criterion, optimiz
     epoch_acc = 100. * correct / total
     return epoch_loss, epoch_acc
 
-def train_with_early_stopping(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader, criterion, optimizer, device: torch.device, num_epochs: int, patience: int):
+def train_model_with_early_stopping(model: nn.Module, train_loader: DataLoader, test_loader: DataLoader, criterion, optimizer, device: torch.device, num_epochs: int, patience: int):
+    """
+    Trains the model with early stopping.
+    
+    Args:
+        model (torch.nn.Module): The model to train.
+        train_loader (torch.utils.data.DataLoader): DataLoader for the training set.
+        test_loader (torch.utils.data.DataLoader): DataLoader for the test set.
+        criterion (torch.nn.Module): The loss function.
+        optimizer (torch.optim.Optimizer): The optimizer.
+        device (torch.device): The device to train on.
+        num_epochs (int): The number of epochs to train for.
+        patience (int): The number of epochs to wait for improvement before stopping.
+    
+    Returns:
+        None
+    """
+    
+    
     best_loss = float('inf')
     counter = 0
 
@@ -208,13 +274,12 @@ def train_with_early_stopping(model: nn.Module, train_loader: DataLoader, test_l
         test_loss, test_acc = evaluate(model, test_loader, criterion, device)
         print(f"Epoch [{epoch}/{num_epochs}]: Train Acc: {train_acc:.2f}%, Test Acc: {test_acc:.2f}%\n")
 
-        stop, best_loss, counter = early_stopping(patience, best_loss, test_loss, counter)
+        stop, best_loss, counter = check_early_stopping(patience, best_loss, test_loss, counter)
         if stop:
             print(f"Early stopping at epoch {epoch}")
             break
 
-    torch.save(model.state_dict(), "model/finetuned_weights/fine_tuned_isic_bcos_resnet50.pth")
-    print("Model saved!")
+    
 
     
 
@@ -249,6 +314,7 @@ def main():
     num_epochs = 10
     learning_rate = 1e-4
     freeze_features = False  # Set True to freeze feature extractor
+    train_with_early_stopping = True
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -259,14 +325,18 @@ def main():
 
     criterion = nn.CrossEntropyLoss()
     optimizer = get_optimizer(model, learning_rate, freeze_features)
+    if train_with_early_stopping:
+        print("Training with early stopping...")
+        train_model_with_early_stopping(model, train_loader, test_loader, criterion, optimizer, device, num_epochs, patience=3)
+    else:
+        for epoch in range(1, num_epochs + 1):
+            _, train_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
+            _, test_acc = evaluate(model, test_loader, criterion, device)
+            print(f"Epoch [{epoch}/{num_epochs}]: Train Acc: {train_acc:.2f}%, Test Acc: {test_acc:.2f}%\n")
+        
 
-    for epoch in range(1, num_epochs + 1):
-        train_loss, train_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
-        test_loss, test_acc = evaluate(model, test_loader, criterion, device)
-        print(f"Epoch [{epoch}/{num_epochs}]: Train Acc: {train_acc:.2f}%, Test Acc: {test_acc:.2f}%\n")
-        #train_with_early_stopping(model, train_loader, test_loader, criterion, optimizer, device, num_epochs, patience=3)
-
-    torch.save(model.state_dict(), "model/finetuned_weights/fine_tuned_isic_bcos_resnet50.pth")
+    os.makedirs("model/finetuned_weights/", exist_ok=True)
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)
     print("Model saved!")
 
 if __name__ == "__main__":
