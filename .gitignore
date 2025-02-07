@@ -1,0 +1,34 @@
+# Virtual environment
+.venv/
+venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# macOS system files
+.DS_Store
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+*.swn
+
+# IDE settings
+.vscode/
+.idea/
+*.iml
+
+# Environment variables and secrets
+.env
+*.env
+
+
+# Ignore build artifacts
+*.egg-info/
