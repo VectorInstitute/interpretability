@@ -40,7 +40,7 @@ def read_image(image_path):
 
 
 
-class EyegazeDataset(Dataset):
+class XrayDataset(Dataset):
     def __init__(self, csv_file, image_path_name):
         
         self.path_name = image_path_name
@@ -136,8 +136,8 @@ class EyegazeDataset(Dataset):
         seq = iaa.Sequential([iaa.Resize((input_size, input_size))])
         image_transform = transforms.Compose([seq.augment_image, transforms.ToTensor(), transforms.Normalize(mean=mean, std=std)])       
         image = image_transform(image)
-        return image.float(), target
-        # return image_path,target
+        return image.float(), target # for all experiments except concept generation
+        # return image_path,target   # for concept generation
         
 
     def num_sort(self, filename):
@@ -146,8 +146,8 @@ class EyegazeDataset(Dataset):
 
     def __getitem__(self, idx):
         image, label = self.get_image(idx)
-        return image,label
-        # return image, label,list(self.all_classes)
+        return image,label # for all experiments except concept generation
+        # return image, label,list(self.all_classes)  # for concept generation
 
 # extracted from: https://github.com/orobix/Prototypical-Networks-for-Few-shot-Learning-PyTorch/blob/master/src/prototypical_batch_sampler.py
 class PrototypicalBatchSampler(object):
@@ -176,8 +176,8 @@ class PrototypicalBatchSampler(object):
         self.sample_per_class = num_samples
         self.iterations = iterations
 
-        # self.classes, self.counts = np.unique(self.labels, return_counts=True)
-        self.counts = 15
+        
+        self.counts = 15  # number of classes
         self.classes = torch.arange(self.counts) 
         
         self.classes = torch.LongTensor(self.classes)
@@ -252,7 +252,7 @@ class PrototypicalBatchSampler(object):
         self.num_classes = 15
         self.classes = [torch.tensor(i) for i in range(self.num_classes)]
         # Create a dictionary that maps each class to the indices of samples belonging to it
-        self.class_to_indices = {c.item(): [] for c in self.classes}  #.tolist()
+        self.class_to_indices = {c.item(): [] for c in self.classes} 
         for sample_idx, label_vec in enumerate(self.labels):
         
             for c in torch.nonzero(label_vec).squeeze(1):  # Get active classes for the sample
@@ -290,7 +290,7 @@ class PrototypicalBatchSampler(object):
             batch_indices = batch_indices[torch.randperm(len(batch_indices))]
             for idx in batch_indices:
                 yield idx.item()
-            # yield batch_indices
+           
 
     def __len__(self):
         '''

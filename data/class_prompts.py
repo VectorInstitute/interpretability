@@ -12,7 +12,7 @@ class_prompts = {"Pleural_Thickening": [
         "Blunting of the costophrenic angle",
         "Shifting of the mediastinum"
       ],
-"No Finding": ["No Finding"], # : Normal appearing lung fields, cardiac silhouette, and mediastinal structures, Clear airspace without abnormal opacities, consolidations, or other findings.
+"No Finding": ["No Finding"], 
 "Cardiomegaly": [
     "Increased size of the heart shadow",
     "Enlargement of the heart silhouette",

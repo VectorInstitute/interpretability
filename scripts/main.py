@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 from datetime import datetime
 from model.model import UnetClassifier, ResNetAttention, ProtoNet, text_generation
-from model_intepretability.imaging_copy.dataset.dataset import split_dataset, EyegazeDataset, PrototypicalBatchSampler
+from model_intepretability.imaging_copy.dataset.dataset import PrototypicalBatchSampler
 from sklearn.metrics import roc_auc_score, roc_curve
 from torch.nn.parallel import DistributedDataParallel as DDP 
 from functools import partial
@@ -34,36 +34,40 @@ plt.rcParams['figure.figsize'] = [25, 10]
 import gradio as gr
 from glob import glob
 from PIL import Image
-
+from dataset.class_prompts import class_prompts
+from model.zeroshot import InferenceModel
+import argparse
+import gc
+from pathlib import Path
+from utils.utils import get_roc_auc_score
+import torch
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+import pandas as pd
+import os
+from dataset.dataset import XrayDataset
+from pathlib import Path
+import pickle
+from utils.zeroshot_utils import calculate_auroc
 
 def make_parser():
     parser = argparse.ArgumentParser(description='Imaging Explainability')
-    parser.add_argument('--output_dir', type=str, default='results', help='Output directory')
-    parser.add_argument('--class_names', type=list, default=['Normal', 'CHF', 'pneumonia'], help='Label names for classification')
     parser.add_argument('--num_workers', type=int, default=4, help='number of workers')
     parser.add_argument('--resize', type=int, default=224, help='Resizing images')
     parser.add_argument('--experiment', type=str, default="baseline", help='Imaging Experiment')
 
-    # Training
+    
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--epochs', type=int, default=20, help='number of epochs')
     parser.add_argument('--lr', type=float, default=1e-3, help='initial learning rate')
     parser.add_argument('--scheduler', default=False, action='store_true', help='[USE] scheduler')
     parser.add_argument('--step_size', type=int, default=5, help='scheduler step size')
 
-    ## UNET Specific arguments.
-    parser.add_argument('--gamma', type=float, default=1.0, help='Used to set the weighting value between the classifier and the segmentation in Unet')
-    parser.add_argument('--model_teacher', type=str, default='timm-efficientnet-b0', help='model_teacher')
-    parser.add_argument('--pretrained_name', type=str, default='noisy-student', help='model pretrained value')
+    
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout')
-    parser.add_argument('--second_loss', type=str, default='ce', choices=['dice', 'ce'], help='Segmentation loss')
+    
 
-    # Misc
-    parser.add_argument('--gpus', type=str, default='7', help='Which gpus to use, -1 for CPU')
-    parser.add_argument('--viz', default=False, action='store_true', help='[USE] Vizdom')
-    parser.add_argument('--gcam_viz', default=False, action='store_true', help='[USE] Used for displaying the GradCam results')
-    parser.add_argument('--test', default=False, action='store_true', help='[USE] flag for testing only')
-    parser.add_argument('--testdir', type=str, default=None, help='model to test [same as train if not set]')
+    
     parser.add_argument('--rseed', type=int, default=42, help='Seed for reproducibility')
     parser.add_argument('--weight_decay', type=int, default=1e-3, help='Seed for reproducibility')
     parser.add_argument('--num_epochs', type=int, default=20, help='Seed for reproducibility')
@@ -114,14 +118,12 @@ def get_roc_auc_score(y_true, y_probs):
     useful_classes_roc_auc_list = []
     
     for i in range(y_true.shape[1]):
-        print("ddp",(y_true[:10, i],(y_true[:10, i])))
         class_roc_auc = roc_auc_score(y_true[:, i], y_probs[:, i])
         class_roc_auc_list.append(class_roc_auc)
         if i != NoFindingIndex:
             useful_classes_roc_auc_list.append(class_roc_auc)
-   
-
     return np.mean(np.array(useful_classes_roc_auc_list))
+
 def gather(tensor, tensor_list=None, root=0, group=None):
     """
         Sends tensor to root process, which store it in tensor_list.
@@ -147,7 +149,7 @@ def compute_test_auc(model, test_loader, device_id):
         for images, labels in test_loader:
             images, labels = images.cuda(device_id, non_blocking=True), labels.cuda(device_id, non_blocking=True)
             outputs,_ = model(images)
-            preds = torch.sigmoid(outputs)#.squeeze()  # Assuming binary classification
+            preds = torch.sigmoid(outputs) # Assuming binary classification
 
             # Gather predictions and labels across all processes
             
@@ -170,8 +172,6 @@ def compute_test_auc(model, test_loader, device_id):
     if dist.get_rank() == 0:
         all_preds = torch.cat(all_preds)
         all_labels = torch.cat(all_labels)
-        print("lllll",all_labels.shape)
-        print("sssss",all_preds.shape)
         auc = get_roc_auc_score(all_labels.numpy(), all_preds.numpy())
         print(f"AUC: {auc}")
         return auc
@@ -207,7 +207,7 @@ def load_checkpoint(model, optimizer,file_path):
     # Create a new state_dict with only the matching keys
     checkpoint_state_dict = {k.replace('module.', ''): v for k, v in checkpoint_state_dict.items()}
     
-    filtered_state_dict = {k: v for k, v in checkpoint_state_dict.items() if k in model.state_dict()}# and "mlp.mlp_layers.dense_1" not in k and "mlp.mlp_layers.dense_0" not in k and "num_norm" not in k}
+    filtered_state_dict = {k: v for k, v in checkpoint_state_dict.items() if k in model.state_dict()}
     
     model.load_state_dict(filtered_state_dict, strict=False)
     
@@ -244,7 +244,7 @@ def save_checkpoint(model, optimizer, epoch, loss,file_path):
 
 def setup() -> None:
     """Initialize the process group."""
-    dist.init_process_group("nccl")#,rank=dist.get_rank(), init_method='env://')
+    dist.init_process_group("nccl")
 
 
 def cleanup() -> None:
@@ -252,7 +252,7 @@ def cleanup() -> None:
     dist.destroy_process_group()
 
 
-def train_baseline(args, train_ds,test_ds):
+def train_attention(args, train_ds,test_ds):
 
     
     
@@ -301,7 +301,7 @@ def train_baseline(args, train_ds,test_ds):
 
         model2 = ResNetAttention(models.resnet18(pretrained=True))
         model2 = model2.cuda(device_id)
-        model2 = DDP(model2, device_ids=[device_id])#,find_unused_parameters=True)
+        model2 = DDP(model2, device_ids=[device_id])
         optimizer = optim.AdamW(model2.parameters(), lr=args.lr,weight_decay=args.weight_decay)
         
         try:
@@ -312,19 +312,14 @@ def train_baseline(args, train_ds,test_ds):
 
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.995, step_size=1)
         optimizer.zero_grad()
-        cl_list=[]
+        
         
         
         for epoch in range(args.num_epochs):
             if epoch<=20:
                 continue
             model2.train()
-            train_loss = 0
-            counter = 0
             num_batches=0
-            val_batch=0
-            train_batches=0
-            epoch_loss = 0
             
             train_loader_examples_num = len(train_dl.dataset)
             training_estimated = np.zeros((train_loader_examples_num, 15), dtype = np.float32)
@@ -365,9 +360,6 @@ def train_baseline(args, train_ds,test_ds):
             
             with torch.set_grad_enabled(False):
 
-                val_loss = 0.0
-                val_b=0
-                total_epoch = 0
                 
                 val_loader_examples_num = len(valid_dl.dataset)
                 validation_estimated = np.zeros((val_loader_examples_num, 15), dtype = np.float32)
@@ -405,8 +397,6 @@ def train_baseline(args, train_ds,test_ds):
             test_loader_examples_num = len(test_dl.dataset)
             test_estimated = np.zeros((test_loader_examples_num, 15), dtype = np.float32)
             test_true  = np.zeros((test_loader_examples_num, 15), dtype = np.float32)
-            n = 0
-            
             k = 0
             
             all_predictions, all_labels = [], []
@@ -425,7 +415,6 @@ def train_baseline(args, train_ds,test_ds):
                 
                 threshold = 0.5
                 pred =(prob >= threshold).float() 
-                print("this shape",attention_weights.shape,images.shape,pred.shape, attention_weights[0].shape,images[0].shape,pred[0].shape)
                 visualize_trainable_attention(attention_weights[0],images[0],labels[0],pred[0])
                 
                 test_estimated[k: k + prob.shape[0], :] = prob.detach().cpu().numpy()
@@ -443,13 +432,6 @@ def train_baseline(args, train_ds,test_ds):
             if dist.get_rank() == 0:
                 auc = get_roc_auc_score( final_labels, final_preds)
                 print(f"Test AUC: {auc}")
-            
-
-            break
-
-        
-
-
     logging.info('Finished training.')
     
     dist.destroy_process_group()
@@ -457,12 +439,7 @@ def train_baseline(args, train_ds,test_ds):
 
 def train_prototype(args, train_ds,test_ds):
 
-    
-    
-    batch_size=args.batch_size
-    
-
-    classifier_criterion = nn.BCEWithLogitsLoss()
+   
 
     global f1_list,auc_list, precision_list, recall_list
     setup()
@@ -528,22 +505,14 @@ def train_prototype(args, train_ds,test_ds):
 
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.995, step_size=1)
         optimizer.zero_grad()
-        cl_list=[]
+        
         
         train_auc = []
         val_auc = []
         for epoch in range(args.num_epochs):
             
             model2.train()
-            train_loss = 0
-            counter = 0
             num_batches=0
-            val_batch=0
-            train_batches=0
-            epoch_loss = 0
-            
-            
-            train_loader_examples_num = len(train_dl.dataset)
             
             k=0
             tr_iter = iter(train_dl)
@@ -577,12 +546,6 @@ def train_prototype(args, train_ds,test_ds):
             model2.eval()
             
             with torch.set_grad_enabled(False):
-
-                val_loss = 0.0
-                val_b=0
-                total_epoch = 0
-                
-                val_loader_examples_num = len(valid_dl.dataset)
                 
                 k = 0
                 for val_batches,(images,labels) in enumerate(valid_dl):
@@ -608,13 +571,8 @@ def train_prototype(args, train_ds,test_ds):
         with torch.set_grad_enabled(False):
 
             
-            test_loader_examples_num = len(test_dl.dataset)
-            
-            n = 0
-            
             k = 0
             
-            all_predictions, all_labels = [], []
             avg_acc = []
             for epoch in range(10):
                 for images,labels in test_dl:
@@ -633,7 +591,7 @@ def train_prototype(args, train_ds,test_ds):
 
         
 
-            break
+            
 
        
 
@@ -642,6 +600,60 @@ def train_prototype(args, train_ds,test_ds):
    
     dist.destroy_process_group()
     return 0
+
+# Some parts were extracted from https://github.com/ChantalMP/Xplainer?tab=readme-ov-file
+def train_zeroshot(test_ds):
+
+    dataloader = DataLoader(test_ds, batch_size=1, shuffle=False)
+    inference_model = InferenceModel()
+    all_descriptors = inference_model.get_all_descriptors(class_prompts)
+
+    all_labels = []
+    all_probs_neg = []
+
+    for images, labels, keys in tqdm(dataloader):
+        
+        agg_probs = []
+        agg_negative_probs = []
+        
+        image_paths = [Path(image_path) for image_path in images]
+        for image_path in image_paths:
+            
+            probs, negative_probs = inference_model.get_descriptor_probs(image_path, descriptors=all_descriptors)
+            agg_probs.append(probs)
+            agg_negative_probs.append(negative_probs)
+
+        probs = {}  # Aggregated
+        negative_probs = {}  # Aggregated
+        for key in agg_probs[0].keys():
+            probs[key] = sum([p[key] for p in agg_probs]) / len(agg_probs)  # Mean Aggregation
+
+        for key in agg_negative_probs[0].keys():
+            negative_probs[key] = sum([p[key] for p in agg_negative_probs]) / len(agg_negative_probs)  # Mean Aggregation
+
+        disease_probs, negative_disease_probs = inference_model.get_diseases_probs(class_prompts, pos_probs=probs,
+                                                                                   negative_probs=negative_probs)
+        predicted_diseases, prob_vector_neg_prompt = inference_model.get_predictions_bin_prompting(class_prompts,
+                                                                                                   disease_probs=disease_probs,
+                                                                                                   negative_disease_probs=negative_disease_probs,
+                                                                                                   keys= agg_probs[0].keys())
+        all_labels.append(labels)
+        all_probs_neg.append(prob_vector_neg_prompt)
+        
+    all_labels = torch.stack(all_labels)
+    all_probs_neg = torch.stack(all_probs_neg)
+
+    # evaluation
+    all_labels = all_labels.squeeze(1)
+    existing_mask = sum(all_labels, 0) > 0
+    all_labels_clean = all_labels[:, existing_mask]
+    
+
+    all_probs_neg_clean = all_probs_neg[:, existing_mask]
+    
+    overall_auroc, per_disease_auroc = calculate_auroc(all_probs_neg_clean, all_labels_clean)
+    
+    print(f"AUROC: {overall_auroc:.5f}\n")
 
 if __name__ == '__main__':
     args = make_parser().parse_args()
@@ -667,13 +679,9 @@ if __name__ == '__main__':
     test_df = csv_file[csv_file['Image Index'].isin(test_images)]
     train_df.reset_index(drop=True, inplace=True)
     test_df.reset_index(drop=True, inplace=True)
-    train_ds = EyegazeDataset(train_df, image_path)
-    test_ds = EyegazeDataset(test_df, image_path)
-    # n_classes = len(np.unique(train_ds.y))
-    # if n_classes < args.classes_per_it_tr or n_classes < args.classes_per_it_val:
-    #     raise(Exception('There are not enough classes in the dataset in order ' +
-    #                     'to satisfy the chosen classes_per_it. Decrease the ' +
-    #                     'classes_per_it_{tr/val} option and try again.'))
+    train_ds = XrayDataset(train_df, image_path)
+    test_ds = XrayDataset(test_df, image_path)
+    
 
 
     ### text generation
@@ -685,10 +693,21 @@ if __name__ == '__main__':
     # model = text_generation()
     # gen_text = model.generate_caption(image2)
 
-    if args.experiment=="baseline": 
-        train_baseline(args, train_ds,test_ds)
-    if args.experiment=="prototype": 
+    if args.experiment=="attention": 
+        train_attention(args, train_ds,test_ds)
+    elif args.experiment=="prototype": 
         train_prototype(args, train_ds,test_ds)
+    elif args.experiment=="concept": 
+        image_path = "/datasets/nih-chest-xrays"    
+        csv_file = pd.read_csv(os.path.join(image_path,"Data_Entry_2017.csv"))
+        test_split = os.path.join(image_path,"test_list.txt")
+        with open(test_split, 'r') as f:
+            test_images = f.read().splitlines()
+            test_df = csv_file[csv_file['Image Index'].isin(test_images)]
+            test_df.reset_index(drop=True, inplace=True)
+            test_ds = XrayDataset(test_df, image_path)
+            train_zeroshot(test_ds)
+            
 
 
     

@@ -25,46 +25,16 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 
 
-def train_embedding(model, train_dl):
-    model.train()
-    total = 0
-    sum_loss = 0
-    optimizer = torch_optim.Adam(model.parameters(), lr=0.001, weight_decay=0)
-    for x1, x2, y in train_dl:
-        batch = y.shape[0]
-        output = model(x1, x2)
-        loss = F.cross_entropy(output, y)   
-        optim.zero_grad()
-        loss.backward()
-        optim.step()
-        total += batch
-        sum_loss += batch*(loss.item())
-    return sum_loss/total
-
 if __name__ == "__main__":
 
     data = pd.read_csv("/Users/ananyaraval/workspace/interpretability-bootcamp/data/US_130/diabetic_data.csv")
     df = process_csv(data)
     df.index=range(df.shape[0])
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns
-    
-    print("colll1",len(df.columns),len(categorical_columns))
-    # for col in categorical_columns:
-    #     df[col] = LabelEncoder().fit_transform(df[col])
-    #     df[col] = df[col].astype('category')
-    print("dfff",df.head())
     X , y = df.drop("readmitted_binarized",axis=1) , df["readmitted_binarized"]
-    
-    # X_train, X_val, y_train, y_val = train_test_split(X, Y, test_size=0.10, random_state=0)
     embedded_cols = {n: len(col.cat.categories) for n,col in X[categorical_columns].items() if len(col.cat.categories) > 2}
-    print("diccc",len(embedded_cols))
     embedded_col_names = embedded_cols.keys()
     embedding_sizes = [(n_categories, min(50, (n_categories+1)//2)) for _,n_categories in embedded_cols.items()]
-
-    print("kkkkk",embedding_sizes)
-    print("embed",embedded_cols)
-    print("colsss",df.columns)
-
     k = 5
     indices = np.arange(len(X))
     np.random.shuffle(indices)
@@ -80,45 +50,20 @@ if __name__ == "__main__":
         
         # Use all other folds as the training set
         train_idx = np.concatenate([folds[j] for j in range(k) if j != i])
-        X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
-
-        # embedding_info = ce.get_embedding_info(X)
-        # # print("embeeeee",embedding_info)
-        # X_encoded,encoders = ce.get_label_encoded_data(X)
-        # # print("encoders",encoders)
-        
-
-
-        # # print("testttt",X_test.shape)
-        # embeddings = ce.get_embeddings(X_train, y_train, categorical_embedding_info=embedding_info, 
-        #                         is_classification=True, epochs=10,batch_size=128)
-        # dfs = ce.get_embeddings_in_dataframe(embeddings=embeddings, encoders=encoders)
-        # print("thereee",dfs.keys())
-        
-
-        # X_train = ce.fit_transform(X_train, embeddings=embeddings, encoders=encoders, drop_categorical_vars=True)
-        # X_test = ce.fit_transform(X_test, embeddings=embeddings, encoders=encoders, drop_categorical_vars=True)
-        
-        
-        smote = RandomOverSampler(random_state=42)#SMOTE(random_state=42)#RandomOverSampler(random_state=42)#SMOTE(random_state=42)
+        X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]     
+        smote = RandomOverSampler(random_state=42)
         X_train, y_train = smote.fit_resample(X_train, y_train) 
-        print("traiiiinnnnnn",X_train.shape)
-        lasso = Lasso(alpha=0.0001) # 0.001
+        lasso = Lasso(alpha=0.0001) 
         lasso.fit(X_train, y_train)
-        # ridge = Ridge(alpha=1.0)
-        # ridge.fit(X_train, y_train)
-        # Get the coefficients of the features
         coef = lasso.coef_
-
         # Select non-zero coefficients 
         selected_features = np.where(coef != 0)[0]
         top_features = [X_train.columns[i] for i in selected_features]
-
-        # Make predictions
         
         X_train_selected = X_train[top_features]
         X_test_selected = X_test[top_features]
-        ebm_selected = xgb.XGBClassifier(n_estimators= 300, max_depth= 6, learning_rate= 0.01, gamma= 0.01, alpha=0.1)#,reg_lambda=1)#(eta= 0.01,
+        ebm_selected = xgb.XGBClassifier(n_estimators= 300, max_depth= 6, learning_rate= 0.01, gamma= 0.01, alpha=0.1)
+        # uncomment the following lines to use the ExplainableBoostingClassifier
         # ebm_selected = ExplainableBoostingClassifier()
     #     learning_rate=0.01,
     #     max_bins=128,
@@ -127,47 +72,26 @@ if __name__ == "__main__":
     #     early_stopping_rounds=10
     # )
         
-        # scaler = StandardScaler()
-
-        # # Fit and transform the features
-        # X_train_selected = scaler.fit_transform(X_train_selected)
-        # X_test_selected = scaler.transform(X_test_selected)
-        # X_train_selected = pd.DataFrame(X_train_selected)
-        # X_test_selected = pd.DataFrame(X_test_selected)
+        
 
         file = open(f'x_test_{i}', 'wb')
 
-        # # dump information to that file
-
         pickle.dump(X_test_selected, file)
-
-        # # close the file
         file.close()
 
         file = open(f'y_train_{i}', 'wb')
-
-        # # dump information to that file
         pickle.dump(y_train, file)
-
-        # # close the file
         file.close()
         file = open(f'x_train_{i}', 'wb')
 
-        # # dump information to that file
-
         pickle.dump(X_train_selected, file)
-
-        # # close the file
         file.close()
         
 
         file = open(f'y_test_{i}', 'wb')
 
-        # # dump information to that file
-
         pickle.dump(y_test, file)
 
-        # # close the file
         file.close()
         ebm_selected.fit(X_train_selected, y_train)
         y_prob = ebm_selected.predict_proba(X_test_selected)[:,1]
@@ -188,16 +112,11 @@ if __name__ == "__main__":
         recall_scores.append(val_recall)
         precision_scores.append(val_precision)
         importances = ebm_selected.feature_importances_
-        # # fi[f"{i}"] = importances
+        #uncomment the following lines to use the ExplainableBoostingClassifier
         # # importances = ebm_selected.explain_global()
-        # # print("dirrrrrrrrrrrrr",importances.data)#,dir(importances))
-        # print("improvee",importances)
-        # fi.append(importances)
+       
         feature_names = X_train_selected.columns
-        # print("ff",feature_names)
-        # ni_index = feature_names.get_loc("number_inpatient")#feature_names[0].index("number_inpatient")
-        # fi_ni.append(importances[ni_index])
-
+# uncomment the following lines to plot the feature importances
 # # Sort the feature importances in descending order
 #         # sorted_indices = np.argsort(importances)[::-1]
         

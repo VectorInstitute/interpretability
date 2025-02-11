@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from transformers import AutoModel, AutoTokenizer
-
+import numpy as np
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, attention=False):
@@ -65,35 +65,6 @@ class SelfAttention(nn.Module):
         return out, attention
 
 # ResNet with Self-Attention
-
-class ResNetAttention(nn.Module):
-    def __init__(self, num_classes=10):
-        super(ResNetAttention, self).__init__()
-
-        self.layer1 = self._make_layer(ResidualBlock, 3, 64, stride=2, attention=False)
-        self.layer2 = self._make_layer(ResidualBlock, 64, 128, stride=2, attention=False)
-        self.layer3 = self._make_layer(ResidualBlock, 128, 256, stride=2, attention=True)
-        self.fc = nn.Linear(256, num_classes) # 512
-
-    def _make_layer(self, block, in_channels, out_channels, stride, attention):
-        return nn.Sequential(
-            block(in_channels, out_channels, stride=stride, attention=attention),
-            block(out_channels, out_channels, stride=1, attention=attention)
-        )
-
-    def forward(self, x):
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = F.adaptive_avg_pool2d(x, (1, 1))
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
-        
-        return x
-    
-
-
-
 class ResNetAttention(nn.Module):
     def __init__(self, original_model,num_classes=15):
         super(ResNetAttention, self).__init__()
@@ -142,47 +113,5 @@ class ProtoNet(nn.Module):
     def forward(self, x):
         x = self.encoder(x)
         return x.view(x.size(0), -1)
-    
-
-class text_generation():
-    def __init__(self):
-        # Load the model and tokenizer
-        self.processor = AutoProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-        self.model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
         
-    def generate_caption(self,image):
-        # Process the image
-        image_array = np.array(image.convert("RGB"))
-        
-        # image_array = np.clip(image_array, a_min=image_array.min(), a_max=image_array.max())  # Ensure no extreme values
-        if len(image_array.shape) == 2:
-            # Stack to create 3 channels (RGB)
-            image_array = np.stack([image_array] * 3, axis=0)
-        normalized_image = image_array
-        # normalized_image = (image_array - image_array.min()) / (image_array.max() - image_array.min())
-        
-        # normalized_image = ((image_array + 1.0) * 255/2)#.astype(np.uint8)
-        ## visualize the image
-        # plt.imshow(image_array[0],cmap="gray")  
-        # plt.colorbar()  # Add a colorbar for reference
-        # plt.title('Visualization of the NumPy Array')
-        # plt.xlabel('X-axis')
-        # plt.ylabel('Y-axis')
-
-        # Save the visualization
-        # plt.savefig('array_visualization.png', dpi=300)
-        # self.processor.do_rescale = False
-        text = "a chest x-ray showing " 
-        inputs = self.processor(normalized_image,text, return_tensors="pt")
-        pixel_values = inputs.pixel_values
-        # Generate caption
-        # generated_ids = self.model.generate(pixel_values=pixel_values, max_length=200, num_beams=6, temperature=1.5,early_stopping=False,repetition_penalty=2.0, do_sample=True)
-        # generated_caption = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        
-        generated_ids = self.model.generate(**inputs,max_length=200, num_beams=8, temperature=0.7,early_stopping=False,repetition_penalty=2.0, do_sample=True,top_k=50)
-        generated_caption = self.processor.decode(generated_ids[0], skip_special_tokens=True)
-        print(f"generated text:{generated_caption}")
-        
-        return generated_caption
-    
 
