@@ -101,13 +101,7 @@ class XrayDataset(Dataset):
 
         
         
-        '''
-        if len(the_chosen) != len(set(the_chosen)):
-            print('\nGadbad !!!')
-            print('and the difference is: ', len(the_chosen) - len(set(the_chosen)))
-        else:
-            print('\nGood')
-        '''
+        
         with open('all_classes.pkl', 'wb') as file:
             pickle.dump(all_classes, file)
         return the_chosen, sorted(list(all_classes)), all_classes
