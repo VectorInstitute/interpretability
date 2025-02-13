@@ -33,6 +33,10 @@ scaler = StandardScaler()
 train_val_data = pd.DataFrame(scaler.fit_transform(train_val_data), columns=train_val_data.columns)
 test_data = pd.DataFrame(scaler.transform(test_data), columns=test_data.columns)
 
+# convert to float16 to save memory
+train_val_data = train_val_data.astype(np.float16)
+test_data = test_data.astype(np.float16)
+
 
 # Split the training and validation data
 train_data, val_data = train_test_split(train_val_data, test_size=0.2, random_state=42)
