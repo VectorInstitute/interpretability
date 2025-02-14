@@ -1,3 +1,3 @@
 '''
-TODO: dd metrics and loss functions
+TODO: Add metrics and loss functions
 '''
