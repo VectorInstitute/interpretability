@@ -17,27 +17,29 @@ print("\n~~~~~ MANUAL USAGE ~~~~~~")
 
 print("\n 1. Create path for data within repo")
 
-print("\nPath to bootcamp repo:",
+print("\nRoot path to bootcamp repo:",
       config.root.repo)
 
-print("\nPath to datafile on the cluster:",
+print("\nRelative path to data folders on the repo:",
       config.data.repo)
 
-print("\nCreate a complete filepath for 1 dataset on the cluster: ", \
-      f'{config.root.vcluster}/{config.data.vcluster.credit_card_behaviour}')
-print("\nOR\n")
-print(os.path.join(config.root.vcluster,\
-                   config.data.vcluster.credit_card_behaviour))
+print("\nCreate an absolute path for 1 dataset on the repo:")
+data_folder = f'{config.root.repo}/{config.data.repo.bank_marketing}'
+print(data_folder)
+
+print("\nUse a csv file for loading into dataframe: ")
+csv_file = f'{data_folder}/bank.csv'
+print(csv_file)
 
 print("\n2. Create path for data on cluster ")
 
-print("\Root path to bootcamp folder:",
+print("\nRoot path to bootcamp folder:",
       config.root.vcluster)
 
 print("\nRelative path to data folder:",
       config.data.vcluster)
 
-print("\nCreate an absolute folder for 1 dataset on the cluster:")
+print("\nCreate an absolute path for 1 dataset on the cluster:")
 data_folder = f'{config.root.vcluster}/{config.data.vcluster.credit_card_behaviour}'
 print(data_folder)
 
@@ -55,7 +57,7 @@ print('\nGet absolute path of a data folder:')
 data_path = config.get_datapath('bank_marketing')
 print(data_path)
 
-print('\n Get absolute file paths of a dataset from repo/cluster:')
+print('\n Get all absolute file paths of a dataset from repo/cluster:')
 data_files = config.get_datafiles('bank_marketing')
 pprint.pprint(data_files)
 
