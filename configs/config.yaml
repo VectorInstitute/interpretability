@@ -1,0 +1,21 @@
+root: 
+  repo: /h/araval/interpretability-bootcamp
+  vcluster: /ssd003/projects/aieng/public/interp_bootcamp
+
+data:
+  repo:
+    adult_census: data/adult_census
+    us_130: data/US_130
+    dhi_data: data/dhi_data
+    gas_turbine: data/gas_turbine
+    bank_marketing: data/bank_marketing
+  vcluster:
+    ham_10000: datasets/HAM10000
+    nih: datasets/NIH
+    credit_card_behaviour: datasets/credit_card_behaviour
+    isic_2024: datasets/isic_2024
+
+#checkpoints:
+
+
+#results:
