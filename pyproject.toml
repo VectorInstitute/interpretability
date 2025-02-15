@@ -5,12 +5,15 @@ description = "AI Interpretability Bootcamp - Vector Institute"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "argparse>=1.4.0",
     "captum>=0.7.0",
     "interpret>=0.6.9",
     "jupyter>=1.1.1",
+    "lifelines>=0.30.0",
     "lime>=0.2.0.1",
     "matplotlib>=3.10.0",
     "notebook>=7.3.2",
+    "numpy>=1.26.4",
     "pandas>=2.2.3",
     "pillow>=11.1.0",
     "pyale>=1.2.0",
@@ -30,4 +33,5 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["data", "interp", "reference_implementations","scripts"]
+packages = ["data", "reference_implementations","scripts"]
+
