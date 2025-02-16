@@ -16,7 +16,7 @@ class Config(object):
         """
         self._repo_yaml = "configs/config.yaml"
         if yaml_path:
-            self.yaml_path = yaml
+            self.yaml_path = yaml_path
         else: 
             self.yaml_path = self._get_default_yaml()
         self._init()
