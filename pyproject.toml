@@ -15,6 +15,7 @@ dependencies = [
     "pillow>=11.1.0",
     "pyale>=1.2.0",
     "pygam>=0.9.1",
+    "python-box[all]~=7.0",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
     "shap>=0.46.0",
