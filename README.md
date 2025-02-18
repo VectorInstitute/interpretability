@@ -30,6 +30,7 @@ Here is the list of the covered topics:
     - GAM
     - NAM
     - EBM
+    - COXNAM
     - ProtoPNet
     - B-COS Networks
 
