@@ -201,6 +201,7 @@ if __name__ == "__main__":
     file_path = data_files['diabetic_data.csv']
 
     #Get data
+    #TODO: (Sara) to remove this code and fix process_csv_new for downloaded data
     #data = pd.read_csv(file_path)
     data = pd.read_csv("/h/araval/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/NAM-NodeGAM/df.csv")
     data = data.drop([88815])
@@ -213,6 +214,7 @@ if __name__ == "__main__":
     X , y = df.drop("readmitted_binarized", axis=1) , df["readmitted_binarized"]
     
     #Get results from XGB model
+    print("\n Get results from XGB model")
     ebm = get_classifier()
     ebm_scores = train_and_predict(ebm, X, y, visualize=True)
 
@@ -227,6 +229,7 @@ if __name__ == "__main__":
           Std. Deviation: {ebm_scores['recall'][1]}")
 
     #Get results from EBM model
+    print("\n Get results from EMB model")
     ebm_explain = get_classifier(explainable=True)
     ebm_explain_scores = train_and_predict(ebm_explain, X, y)
 
