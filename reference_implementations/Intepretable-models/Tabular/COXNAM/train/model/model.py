@@ -25,9 +25,9 @@ class ExULayer(nn.Module):
         self.negative_slope = negative_slope
         self.weight = nn.Parameter(torch.Tensor(out_features, in_features))
         self.bias = nn.Parameter(torch.Tensor(out_features))
-        self.reset_parameters()
+        self._reset_parameters()
         
-    def reset_parameters(self):
+    def _reset_parameters(self):
         nn.init.kaiming_normal_(self.weight, a=self.negative_slope, nonlinearity='leaky_relu')
         nn.init.zeros_(self.bias)
         
