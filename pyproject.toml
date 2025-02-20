@@ -34,5 +34,4 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["data", "reference_implementations","scripts"]
-
+packages = ["data", "interp", "reference_implementations","scripts"]
