@@ -13,68 +13,40 @@ from sklearn.metrics import f1_score, roc_auc_score, precision_score, recall_sco
 
 from data import Config
 
-def process_csv(df):
-    """
-    """
-    df["readmitted_binarized"] = df["readmitted"].apply(lambda x: 1 if x=="b'<30'" else 0)
-    df = df.drop(['Unnamed: 0',"encounter_id","patient_nbr","examide", "readmitted","weight","payer_code","medical_specialty"], axis=1) #"citoglipton","readmitted","weight","payer_code","medical_specialty"], axis=1)  #discharge????
-
-    #Source: https://medium.com/analytics-vidhya/diabetes-130-us-hospitals-for-years-1999-2008-e18d69beea4d
-    age_dic = { "b'[0-10)'" : 5,
-                "b'[10-20)'" : 15,
-                "b'[20-30)'" : 25, 
-                "b'[30-40)'" : 35, 
-                "b'[40-50)'" : 45, 
-                "b'[50-60)'" : 55,
-                "b'[60-70)'" : 65, 
-                "b'[70-80)'" : 75,
-                "b'[80-90)'" : 85,
-                "b'[90-100)'" : 95
-            }
-    
-    df['age'] = df['age'].apply(lambda x : age_dic[x])
-    df["diag_1"] = df["diag_1"].apply(lambda x: x[:x.find(".")])
-    df["diag_2"] = df["diag_2"].apply(lambda x: x[:x.find(".")])
-    df["diag_3"] = df["diag_3"].apply(lambda x: x[:x.find(".")])
-      
-    categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()    
-    for cat_column in categorical_columns:
-      frequency_encoding = df[cat_column].value_counts(normalize=True).to_dict()
-      df[f"encoded_{cat_column}"] = df[cat_column].map(frequency_encoding)
-      df = df.drop(cat_column, axis=1)
-
-    return df
-
-def process_csv_new(df: pd.DataFrame) -> pd.DataFrame:
+def process_csv(df: pd.DataFrame) -> pd.DataFrame:
     """
     Function for new data downloaded from UCL
     """
-    df["readmitted_binarized"] = df["readmitted"].apply(lambda x: 1 if x=="<30" else 0)
-    df = df.drop(["encounter_id","patient_nbr","examide",
-                  "readmitted","weight","payer_code","medical_specialty"], axis=1)
-
-    # Source: https://medium.com/analytics-vidhya/diabetes-130-us-hospitals-for-years-1999-2008-e18d69beea4d
-    age_dic = { "[0-10)" : 5,
-                "[10-20)" : 15,
-                "[20-30)" : 25, 
-                "[30-40)" : 35, 
-                "[40-50)" : 45, 
-                "[50-60)" : 55,
-                "[60-70)" : 65, 
-                "[70-80)" : 75,
-                "[80-90)" : 85,
-                "[90-100)" : 95
-            }
+    age_transform = { '[0-10)' : 5,
+                      '[10-20)' : 15,
+                      '[20-30)' : 25,
+                      '[30-40)' : 35,
+                      '[40-50)' : 45,
+                      '[50-60)' : 55,
+                      '[60-70)' : 65,
+                      '[70-80)' : 75,
+                      '[80-90)' : 85,
+                      '[90-100)' : 95
+                    }
     
-    df['age'] = df['age'].apply(lambda x : age_dic[x])
-    df["diag_1"] = df["diag_1"].apply(lambda x: x[:x.find(".")])
-    df["diag_2"] = df["diag_2"].apply(lambda x: x[:x.find(".")])
-    df["diag_3"] = df["diag_3"].apply(lambda x: x[:x.find(".")])
-      
+    #Apply column specific transformations
+    df['age'] = df['age'].apply(lambda x : age_transform[x])
+    df['diag_1'] = df['diag_1'].apply(lambda x: x[:x.find(".")])
+    df['diag_2'] = df['diag_2'].apply(lambda x: x[:x.find(".")])
+    df['diag_3'] = df['diag_3'].apply(lambda x: x[:x.find(".")])
+    df['readmitted_binarized'] = df['readmitted'].apply(lambda x: 1 if x=='<30' else 0)
+    df['max_glu_serum'] = df['max_glu_serum'].apply(lambda x: 'Unknown' if type(x) != str else x)
+    df['A1Cresult'] = df['A1Cresult'].apply(lambda x: 'Unknown' if type(x) != str else x)
+
+    #Drop columns which are not needed
+    df = df.drop(['encounter_id', 'patient_nbr', 'examide',
+                  'readmitted','weight','payer_code', 'medical_specialty'], axis=1)
+
+    #Frequency encoding of categorical columns
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()    
     for cat_column in categorical_columns:
       frequency_encoding = df[cat_column].value_counts(normalize=True).to_dict()
-      df[f"encoded_{cat_column}"] = df[cat_column].map(frequency_encoding)
+      df[f'encoded_{cat_column}'] = df[cat_column].map(frequency_encoding)
       df = df.drop(cat_column, axis=1)
 
     return df
@@ -86,15 +58,18 @@ def plot_features(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier]
     """
     if isinstance(model, xgb.XGBClassifier):
         importances = model.feature_importances_
+        model_type = 'xgb'
+        plt.figure(figsize=(20, 15))
+        plt.barh(range(len(feature_names)), importances, align='center')
+        plt.yticks(range(len(feature_names)), feature_names)
+        plt.xlabel(f'Feature Importance for Fold {fold}')
+        plt.title('Feature Importance plot')
+        plt.savefig(f'feature_importance_{model_type}_{fold}.png')
     else:
         importances = model.explain_global()
-        
-    plt.figure(figsize=(20, 15))
-    plt.barh(range(len(feature_names)), importances, align='center')
-    plt.yticks(range(len(feature_names)), feature_names)
-    plt.xlabel(f'Feature Importance for Fold {fold}')
-    plt.title('Feature Importance plot')
-    plt.savefig(f'feature_importance_fold_{fold}.png')
+        model_type = 'ebm'
+        ebm_plot = importances.visualize()
+        ebm_plot.write_image(f"feature_importance_{model_type}_{fold}.png")
 
 def get_classifier(explainable: bool = False
                     ) -> Union[xgb.XGBClassifier, ExplainableBoostingClassifier]:
@@ -180,15 +155,15 @@ def train_and_predict(model: Union[xgb.XGBClassifier, ExplainableBoostingClassif
         #Calculate train AUC score
         train_auc = roc_auc_score(y_train, y_tr_pred)
 
-        print(f"Train AUC score for fold {i+1}: ", train_auc)
+        print(f"\nTrain AUC score for fold {i+1}: ", train_auc)
 
         #Calculate test data scores
-        f1.append(roc_auc_score(y_test, y_te_prob))
-        auc.append(f1_score(y_test, y_te_pred))
+        auc.append(roc_auc_score(y_test, y_te_prob))
+        f1.append(f1_score(y_test, y_te_pred))
         precision.append(recall_score(y_test, y_te_pred))
         recall.append(precision_score(y_test, y_te_pred))
        
-        print(f"Test scores for Fold {i+1}: \nF1: {f1[i]} \nAUC: {auc[i]}, \
+        print(f"\nTest scores for Fold {i+1}: \nF1: {f1[i]} \nAUC: {auc[i]}, \
               \nPrecision: {precision[i]} \nRecall: {recall[i]}")
                
     return {'f1': (np.mean(f1), np.std(f1)),
@@ -196,25 +171,21 @@ def train_and_predict(model: Union[xgb.XGBClassifier, ExplainableBoostingClassif
             'precision': (np.mean(precision),np.std(precision)),
             'recall': (np.mean(recall),np.std(recall))}
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
-    #Get config
+    #Get data config
     config = Config()
     data_files = config.get_datafiles('us_130')
     file_path = data_files['diabetic_data.csv']
 
-    #Get data
-    #TODO: (Sara) to remove this code and fix process_csv_new for downloaded data
-    #data = pd.read_csv(file_path)
-    data = pd.read_csv("/h/araval/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/NAM-NodeGAM/df.csv")
-    data = data.drop([88815])
+    #Read data
+    data = pd.read_csv(file_path)
 
     #Pre-process data
     df = process_csv(data)
-    #df = process_csv_new(data)
     
-    #Create training data and labels
-    X , y = df.drop("readmitted_binarized", axis=1) , df["readmitted_binarized"]
+    #Separate training data and labels
+    X, y = df.drop('readmitted_binarized', axis=1) , df['readmitted_binarized']
     
     #Get results from XGB model
     print("\n---------------------")
@@ -238,7 +209,7 @@ if __name__ == "__main__":
     print("Fitting EBM model..")
     print("---------------------")
     ebm_explain = get_classifier(explainable=True)
-    ebm_explain_scores = train_and_predict(ebm_explain, X, y)
+    ebm_explain_scores = train_and_predict(ebm_explain, X, y, visualize=True)
 
     print(f"\nScores of Explaining Boosting Classifier:")
     print(f"F1: Mean: {ebm_explain_scores['f1'][0]} \t  \
