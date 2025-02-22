@@ -1,5 +1,5 @@
+from .nam import ExULayer, ReLULayer, NeuralAdditiveModel
 __all__ = [
-    'nam',
     'protonet',
     'resnetattention'
 ]
