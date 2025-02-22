@@ -50,7 +50,6 @@ def process_csv(df: pd.DataFrame) -> pd.DataFrame:
       df = df.drop(cat_column, axis=1)
 
     return df
->>>>>>> 1fa0912 (Fix bug in metrics; Fix formatting; Fix data transformation function; Fix plot function to include Kaleido)
 
 def plot_features(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
                   fold: int,
