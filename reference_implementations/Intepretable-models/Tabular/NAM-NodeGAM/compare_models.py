@@ -11,45 +11,8 @@ from imblearn.over_sampling import RandomOverSampler
 from interpret.glassbox import ExplainableBoostingClassifier
 from sklearn.metrics import f1_score, roc_auc_score, precision_score, recall_score
 
-from data import Config
+from data import Config, process_us_130_csv
 
-def process_csv(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Function for new data downloaded from UCL
-    """
-    age_transform = { '[0-10)' : 5,
-                      '[10-20)' : 15,
-                      '[20-30)' : 25,
-                      '[30-40)' : 35,
-                      '[40-50)' : 45,
-                      '[50-60)' : 55,
-                      '[60-70)' : 65,
-                      '[70-80)' : 75,
-                      '[80-90)' : 85,
-                      '[90-100)' : 95
-                    }
-    
-    #Apply column specific transformations
-    df['age'] = df['age'].apply(lambda x : age_transform[x])
-    df['diag_1'] = df['diag_1'].apply(lambda x: x[:x.find(".")])
-    df['diag_2'] = df['diag_2'].apply(lambda x: x[:x.find(".")])
-    df['diag_3'] = df['diag_3'].apply(lambda x: x[:x.find(".")])
-    df['readmitted_binarized'] = df['readmitted'].apply(lambda x: 1 if x=='<30' else 0)
-    df['max_glu_serum'] = df['max_glu_serum'].apply(lambda x: 'Unknown' if type(x) != str else x)
-    df['A1Cresult'] = df['A1Cresult'].apply(lambda x: 'Unknown' if type(x) != str else x)
-
-    #Drop columns which are not needed
-    df = df.drop(['encounter_id', 'patient_nbr', 'examide',
-                  'readmitted','weight','payer_code', 'medical_specialty'], axis=1)
-
-    #Frequency encoding of categorical columns
-    categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()    
-    for cat_column in categorical_columns:
-      frequency_encoding = df[cat_column].value_counts(normalize=True).to_dict()
-      df[f'encoded_{cat_column}'] = df[cat_column].map(frequency_encoding)
-      df = df.drop(cat_column, axis=1)
-
-    return df
 
 def plot_features(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
                   fold: int,
@@ -182,7 +145,7 @@ if __name__ == '__main__':
     data = pd.read_csv(file_path)
 
     #Pre-process data
-    df = process_csv(data)
+    df = process_us_130_csv(data)
     
     #Separate training data and labels
     X, y = df.drop('readmitted_binarized', axis=1) , df['readmitted_binarized']
