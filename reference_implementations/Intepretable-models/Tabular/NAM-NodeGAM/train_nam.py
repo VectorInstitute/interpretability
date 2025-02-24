@@ -146,7 +146,6 @@ if __name__ == "__main__":
                                 hidden_layer=hidden_layer,
                                 hidden_dropout=nam_config.nam.dropout,
                                 feature_dropout=nam_config.nam.feature_dropout)
-    print(model)
     model = model.cuda()   
 
     nam_scores = train_and_predict(model, nam_config, train_dl, test_dl, val_dl)
