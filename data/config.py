@@ -87,7 +87,11 @@ class Config(object):
     def datasets(self) -> List:
         """
         """
+        #assert 'data' in self.__dict__.keys()
         return [*self.data.repo] + [*self.data.vcluster]
     
     def __repr__(self):
-        return f'Root: {self.root}\nData: {self.data}'
+        repr = ""
+        for key in self.__dict__.keys():
+            repr += f"{key}: {self.__dict__[key]}\n"
+        return repr
