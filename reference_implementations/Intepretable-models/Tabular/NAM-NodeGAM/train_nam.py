@@ -130,8 +130,11 @@ if __name__ == "__main__":
     print("------------------------------")
     print("Training NAM on US_130 dataset")
     print("------------------------------")
+ 
+    #Setup
     device = get_device()
     print(f"Using device: {device}")
+    random_seed(42)
 
     shallow_units = calculate_n_units(get_full_data(train_dl),
                                       nam_config.nam.n_basis_functions,
@@ -147,7 +150,6 @@ if __name__ == "__main__":
                                 hidden_dropout=nam_config.nam.dropout,
                                 feature_dropout=nam_config.nam.feature_dropout)
     model = model.cuda()   
-
     nam_scores = train_and_predict(model, nam_config, train_dl, test_dl, val_dl)
 
     print(f"\nScores of NAM model:")
