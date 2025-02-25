@@ -134,7 +134,7 @@ if __name__ == "__main__":
     #Setup
     device = get_device()
     print(f"Using device: {device}")
-    random_seed(42)
+    random_seed(42, True)
 
     shallow_units = calculate_n_units(get_full_data(train_dl),
                                       nam_config.nam.n_basis_functions,
