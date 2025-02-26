@@ -821,6 +821,31 @@ wheels = [
 ]
 
 [[package]]
+name = "gosdt"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scikit-learn" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5b/43/7b08fad80fe3d33b842c4ef193edef4bd585139cbd95baee8abb16d1cf64/gosdt-1.0.1.tar.gz", hash = "sha256:39191261351bcba84b90dbd17debb17d2c046a40ed3f31b5535685e9335f19e4", size = 184833 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7e/86/40eb0d67f163f8a0568fc1c6ce01bd2666d37e93d5f74faabe7f89d9b9f4/gosdt-1.0.1-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:536721dde4aa3da9e8eebd3ad6be35b80f896805bc1a3ed2f5130a872267143a", size = 695809 },
+    { url = "https://files.pythonhosted.org/packages/70/13/f7c873798097be1a4190b91fa22b60b93af61939e503f0176f9ed1f1117b/gosdt-1.0.1-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:a6a35931ef03be23653524546c7811440fdf9b5888048e95e7de2189b676b3c1", size = 606385 },
+    { url = "https://files.pythonhosted.org/packages/31/77/67c99e2630e1f32e3fb600b11790e3b4ce30e46d8060030cf40ac1318ae8/gosdt-1.0.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0306fb7889350a76b39926b1b918e215ac1eefa0ffb3868424e51959a8a8bb5f", size = 3257024 },
+    { url = "https://files.pythonhosted.org/packages/80/05/887025343cdb7040a17d6815e2549072bef0890a29ce6d91cf497b9bcfbf/gosdt-1.0.1-cp310-cp310-win_amd64.whl", hash = "sha256:7d83bdd6160cb0b6cbe72e4e7aab896a3df3d4bc47acc4e6e520fff3c23c3560", size = 802213 },
+    { url = "https://files.pythonhosted.org/packages/1e/3e/2f7ef970dd1c501d7454aef598d0d4f0877af149e5376b86ba47742987bc/gosdt-1.0.1-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:f96015750ea4f81879c89e4147f5691485be0cb1478cc7e3c5f2a3702ea98873", size = 697079 },
+    { url = "https://files.pythonhosted.org/packages/73/74/147cbbdd8f62032ffbd05bee684a32337a8302b89e5bb354d487bd418526/gosdt-1.0.1-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:c8af7a16d2cabac34ab739d1fb75f45b79a3abfa73da7d30fad5a1448fc84563", size = 607644 },
+    { url = "https://files.pythonhosted.org/packages/c2/ab/ac1580ad166729a3c48aa0a05260c2dd6c59b25b5aefe0966fff4534ec54/gosdt-1.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fb06f05ea7e61c8e6a8b19b3f115a525fb1ea44fc400fa5b7b086c2707eaf4fb", size = 3257660 },
+    { url = "https://files.pythonhosted.org/packages/f5/5e/bef6629ae49d85e20781eff1c06d81a4c969b6a73d35c46daf6f7e5dcfa7/gosdt-1.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf3d27b8f3c24842f7b9df25f9b34a447c246c6106995ae420e48cd1a06bc236", size = 803072 },
+    { url = "https://files.pythonhosted.org/packages/f1/b0/d8c08c9a56d422e19aeaa4d2711fcb71e7451287538671ea770a448a572b/gosdt-1.0.1-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:e977bfea7f1adce01436a0a3250891a53404abaa2f85b127f173cb2b1364a54e", size = 699194 },
+    { url = "https://files.pythonhosted.org/packages/55/15/f2f2b4c5524ad32422efca37330220bc6b224d448e434eac1d09024dc6b6/gosdt-1.0.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:b6ec13d3aee142300886bb3ac2f403aa7d64ba4240c31b8c96e056eb1a0b2050", size = 608430 },
+    { url = "https://files.pythonhosted.org/packages/b5/c8/f704d7a726305f37da319b3d0a55be45a46ee8acf30016fadb83a4f8bf1d/gosdt-1.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e5e866a1b9ef4795648417138afb0a4ecea36a743072a895cdf158e75eac4991", size = 3256882 },
+    { url = "https://files.pythonhosted.org/packages/8e/8c/82a3edefabaac22b6365c9168999a04c4b5d832b9a77f056746308b40c44/gosdt-1.0.1-cp312-cp312-win_amd64.whl", hash = "sha256:61ff0208ba0b9c1bb9bb2ac2040ef047c1b1f1b548dfdd7a08234d00100162c1", size = 803673 },
+]
+
+[[package]]
 name = "graphviz"
 version = "0.20.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1043,6 +1068,8 @@ source = { editable = "." }
 dependencies = [
     { name = "argparse" },
     { name = "captum" },
+    { name = "gosdt" },
+    { name = "graphviz" },
     { name = "interpret" },
     { name = "jupyter" },
     { name = "lifelines" },
@@ -1074,6 +1101,8 @@ dependencies = [
 requires-dist = [
     { name = "argparse", specifier = ">=1.4.0" },
     { name = "captum", specifier = ">=0.7.0" },
+    { name = "gosdt", specifier = ">=1.0.1" },
+    { name = "graphviz", specifier = ">=0.20.3" },
     { name = "interpret", specifier = ">=0.6.9" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "lifelines", specifier = ">=0.30.0" },
