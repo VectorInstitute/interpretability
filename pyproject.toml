@@ -17,6 +17,7 @@ dependencies = [
     "numpy>=1.26.4",
     "pandas>=2.2.3",
     "pillow>=11.1.0",
+    "plotly>=6.0.0",
     "pyale>=1.2.0",
     "pygam>=0.9.1",
     "python-box[all]~=7.0",
@@ -35,3 +36,6 @@ dependencies = [
 
 [tool.setuptools]
 packages = ["data", "interp", "reference_implementations","scripts"]
+
+[tool.uv]
+package = true
