@@ -17,6 +17,7 @@ dependencies = [
     "nodegam>=0.3.0",
     "notebook>=7.3.2",
     "numpy>=1.26.4",
+    "opencv-python>=4.11.0.86",
     "pandas>=2.2.3",
     "pillow>=11.1.0",
     "plotly>=6.0.0",
@@ -37,7 +38,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["data", "interp", "reference_implementations","scripts"]
+packages = ["data", "interp", "reference_implementations","scripts", "utils"]
 
 [tool.uv]
 package = true
