@@ -18,7 +18,6 @@ from data import Config
 from interp.metrics import get_multiclass_roc_auc_score, get_dist_auc
 from interp.utils import *
 from interp.models import ResNetAttention
-from interp.visualize import visualize_trainable_attention
 from utils import cleanup, worker_init_fn, save_checkpoint, setup_distributed_training
 from data import XrayDataset, load_nih_data
 
@@ -53,8 +52,7 @@ def get_data_loaders(cfg: Config,
 
 def eval_step(model: ResNetAttention,
               data_dl: DataLoader,
-              device_id: int,
-              visualize: bool = False) -> Tuple[np.array, np.array]:
+              device_id: int) -> Tuple[np.array, np.array]:
     """
     """
     model.eval()
@@ -71,12 +69,6 @@ def eval_step(model: ResNetAttention,
             
             logits = torch.squeeze(logits)
             prob = torch.sigmoid(logits)
-            
-            if visualize:
-                threshold = 0.5
-                pred = (prob >= threshold).float() 
-                plot = visualize_trainable_attention(attention_weights[0], images[0], pred[0], num_classes)
-                plot.save()
             
             y_probs = np.concatenate((y_probs, prob.detach().cpu().numpy()))
             y_true = np.concatenate((y_true, labels.detach().cpu().numpy()))
@@ -97,8 +89,7 @@ def train_selfattention(model: ResNetAttention,
     no_disease_class_idx = train_dl.dataset.unique_labels.index('No Finding')
     num_unique_classes = len(train_dl.dataset.unique_labels)
 
-    for epoch in range(1):
-    #for epoch in range(cfg.train_params.num_epochs):
+    for epoch in range(cfg.train_params.num_epochs):
         print(f'\nTraining Epoch {epoch} on device {device_id}')
         model.train() 
 
@@ -136,7 +127,7 @@ def train_selfattention(model: ResNetAttention,
             save_checkpoint(model, optimizer, epoch, loss.item(),
                             file_path=f'{epoch}_{cfg.output_file}')
         
-        y_te_probs, y_te_true = eval_step(model, test_dl, device_id, visualize=True)
+        y_te_probs, y_te_true = eval_step(model, test_dl, device_id)
         y_te_probs = np.delete(y_te_probs, no_disease_class_idx, axis=1)
         y_te_true = np.delete(y_te_true, no_disease_class_idx, axis=1)
 
