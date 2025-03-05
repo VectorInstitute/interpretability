@@ -75,7 +75,8 @@ def eval_step(model: ResNetAttention,
             if visualize:
                 threshold = 0.5
                 pred = (prob >= threshold).float() 
-                #visualize_trainable_attention(attention_weights[0], images[0], num_classes)
+                plot = visualize_trainable_attention(attention_weights[0], images[0], pred[0], num_classes)
+                plot.save()
             
             y_probs = np.concatenate((y_probs, prob.detach().cpu().numpy()))
             y_true = np.concatenate((y_true, labels.detach().cpu().numpy()))
@@ -96,7 +97,8 @@ def train_selfattention(model: ResNetAttention,
     no_disease_class_idx = train_dl.dataset.unique_labels.index('No Finding')
     num_unique_classes = len(train_dl.dataset.unique_labels)
 
-    for epoch in range(cfg.train_params.num_epochs):
+    for epoch in range(1):
+    #for epoch in range(cfg.train_params.num_epochs):
         print(f'\nTraining Epoch {epoch} on device {device_id}')
         model.train() 
 
@@ -118,10 +120,6 @@ def train_selfattention(model: ResNetAttention,
             optimizer.step()
 
             print(f'\n Loss on device_id {device_id} for epoch {epoch}: {loss}')
-            if (num_batches+1)%8==0:
-                print("Saving checkpoint for epoch {0}")
-                save_checkpoint(model, optimizer, epoch, loss.item(),
-                                file_path=f'{epoch}_{cfg.output_file}')
             
             y_tr_probs = np.concatenate((y_tr_probs, prob.detach().cpu().numpy()))
             y_tr_true = np.concatenate((y_tr_true, labels.detach().cpu().numpy()))
@@ -129,11 +127,16 @@ def train_selfattention(model: ResNetAttention,
         y_tr_probs = np.delete(y_tr_probs, no_disease_class_idx, axis=1)
         y_tr_true = np.delete(y_tr_true, no_disease_class_idx, axis=1)
         
+        train_auc = get_multiclass_roc_auc_score(y_tr_probs, y_tr_true)
         if dist.get_rank() == 0:  
-            train_auc = get_multiclass_roc_auc_score(y_tr_probs, y_tr_true)  
             print(f'Train AUC on device_id {device_id} for epoch {epoch}: {train_auc}')
         
-        y_te_probs, t_te_true = eval_step(model, test_dl, device_id, visualize=True)
+        if dist.get_rank() == 0 and (epoch+1)%4 == 0:
+            print(f'Saving checkpoint for epoch {epoch}')
+            save_checkpoint(model, optimizer, epoch, loss.item(),
+                            file_path=f'{epoch}_{cfg.output_file}')
+        
+        y_te_probs, y_te_true = eval_step(model, test_dl, device_id, visualize=True)
         y_te_probs = np.delete(y_te_probs, no_disease_class_idx, axis=1)
         y_te_true = np.delete(y_te_true, no_disease_class_idx, axis=1)
 
@@ -141,9 +144,12 @@ def train_selfattention(model: ResNetAttention,
         if dist.get_rank() == 0:
             print(f'Test AUC device_id {device_id} for epoch {epoch}: {test_auc}')
 
-    print('Saving final model')
-    save_checkpoint(model, optimizer, epoch, loss.item(),
-                    file_path=cfg.output_file)          
+        break
+    if dist.get_rank() == 0:
+        print('Saving final model')
+        save_checkpoint(model, optimizer, epoch, loss.item(),
+                    file_path=cfg.output_file)
+
     return test_auc
 
 
