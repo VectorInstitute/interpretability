@@ -44,7 +44,7 @@ def get_multiclass_roc_auc_score(y_probs: np.array,
     per_class_score = [
                         roc_auc_score(y_true[:, i], y_probs[:, i]) 
                         for i in range(num_classes)
-                    ]
+    ]
     return np.mean(np.array(per_class_score))
 
 def aggregate_auc_predictions(predictions: np.array,

@@ -6,8 +6,6 @@ import torch.distributed as dist
 def setup() -> None:
     """Initialize the process group."""
     dist.init_process_group(backend="nccl")
-    #init_process_group(backend='nccl', init_method='env://')
-
 
 def gather(tensor, tensor_list=None, root=0, group=None):
     """
@@ -46,6 +44,8 @@ def cleanup() -> None:
     dist.destroy_process_group()
 
 def save_checkpoint(model, optimizer, epoch, loss, file_path):
+    """
+    """
     checkpoint = {
         'epoch': epoch,
         'model_state_dict': model.state_dict(),
@@ -62,3 +62,27 @@ def setup_distributed_training():
     torch.cuda.empty_cache()
     device_id = torch.cuda.current_device()
     return device_id
+
+def load_checkpoint(model, optimizer, file_path):
+    """
+    """
+    checkpoint = torch.load(file_path)
+   
+    checkpoint_state_dict = checkpoint['model_state_dict']
+
+    # Create a new state_dict with only the matching keys
+    checkpoint_state_dict = {
+        k.replace('module.', ''): v \
+            for k, v in checkpoint_state_dict.items()
+        }
+    
+    filtered_state_dict = { k: v
+        for k, v in checkpoint_state_dict.items()
+            if k in model.state_dict()
+    }
+    
+    model.load_state_dict(filtered_state_dict, strict=False)
+    
+    epoch = checkpoint['epoch']
+    loss = checkpoint['loss']
+    return model, optimizer, epoch, loss

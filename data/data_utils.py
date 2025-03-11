@@ -4,6 +4,7 @@ import cv2
 import torch
 import numpy as np
 import pandas as pd
+from imgaug import augmenters as iaa
 from torchvision import transforms
 from torch.utils.data import Dataset
 from sklearn.model_selection import ShuffleSplit, StratifiedShuffleSplit
@@ -115,6 +116,7 @@ def load_nih_data(cfg: Config) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
         return train_df, test_df
 
+
 class XrayDataset(Dataset):
     def __init__(self,
                  cfg: Config,
@@ -131,12 +133,10 @@ class XrayDataset(Dataset):
             for i in range(len(self._data_df)):
                 row_labels = str.split(self._data_df.iloc[i, :]['Finding Labels'], '|')
                 unique_classes.update(row_labels)
-            print('unique classes: ', list(unique_classes))
             return list(unique_classes)
 
         self.unique_labels = get_unique_labels()
         self.labels = self._data_df['Finding Labels'].apply(lambda x: self.get_label_vector(x))
-        print(self.labels[0])
 
     def __len__(self):
         return len(self._data_df)
@@ -153,17 +153,20 @@ class XrayDataset(Dataset):
             target[lab_idx] = 1
         return target
 
+
     def get_image(self, idx: int):
         def transform_image(image):
             if len(image.shape) == 2:
                 image = np.expand_dims(image, axis=-1)
             mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
-            image_transform = transforms.Compose([transforms.ToTensor(),
-                                                transforms.Resize((224, 224)),
-                                                transforms.Normalize(mean=mean, std=std)])
+            input_size = 224
+            seq = iaa.Sequential([iaa.Resize((input_size, input_size))])
+            image_transform = transforms.Compose([seq.augment_image,
+                                                  transforms.ToTensor(),
+                                                  transforms.Normalize(mean=mean, std=std)])
             return image_transform(image)
 
-        image_name = self._data_df.loc[idx,'Image Index']
+        image_name = self._data_df.loc[idx, 'Image Index']
         image_path = self._file_paths[image_name]
         image = read_image(image_path)
         image = transform_image(image)
