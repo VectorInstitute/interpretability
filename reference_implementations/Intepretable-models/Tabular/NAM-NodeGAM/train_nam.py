@@ -161,3 +161,4 @@ if __name__ == "__main__":
           Std. Deviation: {nam_scores['precision'][1]}")
     print(f"Recall: Mean: {nam_scores['recall'][0]} \t \
           Std. Deviation: {nam_scores['recall'][1]}")
+
