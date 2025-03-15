@@ -1,0 +1,40 @@
+// GOSDT Decision Tree
+digraph {
+	0 [label="age <= 21.5?"]
+	1 [label="priors_count <= 1.5?"]
+	0 -> 1 [label=No]
+	2 [label="age <= 27.5?"]
+	1 -> 2 [label=No]
+	3 [label="juvenile_crimes <= 0.5?"]
+	2 -> 3 [label=No]
+	4 [label="Class: 1
+Loss: 0.0152" shape=box]
+	3 -> 4 [label=No]
+	5 [label="age <= 38.5?"]
+	3 -> 5 [label=Yes]
+	6 [label="priors_count <= 7.5?"]
+	5 -> 6 [label=No]
+	7 [label="Class: 1
+Loss: 0.0188" shape=box]
+	6 -> 7 [label=No]
+	8 [label="Class: 0
+Loss: 0.0355" shape=box]
+	6 -> 8 [label=Yes]
+	9 [label="priors_count <= 3.5?"]
+	5 -> 9 [label=Yes]
+	10 [label="Class: 1
+Loss: 0.0349" shape=box]
+	9 -> 10 [label=No]
+	11 [label="Class: 0
+Loss: 0.0252" shape=box]
+	9 -> 11 [label=Yes]
+	12 [label="Class: 1
+Loss: 0.0398" shape=box]
+	2 -> 12 [label=Yes]
+	13 [label="Class: 0
+Loss: 0.1229" shape=box]
+	1 -> 13 [label=Yes]
+	14 [label="Class: 1
+Loss: 0.0255" shape=box]
+	0 -> 14 [label=Yes]
+}

@@ -13,7 +13,6 @@ from sklearn.metrics import f1_score, roc_auc_score, precision_score, recall_sco
 
 from data import Config, process_us_130_csv
 
-
 def plot_features(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
                   fold: int,
                   feature_names: List) -> None:
