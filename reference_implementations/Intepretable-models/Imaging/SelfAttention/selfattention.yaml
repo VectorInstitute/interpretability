@@ -1,0 +1,17 @@
+data_dir: '/ssd003/projects/aieng/public/interp_bootcamp/datasets/NIH'
+checkpoint_dir: '/scratch/ssd004/scratch/araval/self_attention_checkpoints' #Change to your username
+checkpoint_file: 0_self_attention.pth
+output_file: self_attention.pth
+plot_folder: attention_plots
+
+train_params:
+  num_workers: 4
+  resize: 224
+  num_epochs: 20
+  weight_decay: 1e-3
+  batch_size: 32
+
+optimizer:
+  lr: 0.001
+
+rseed: 42

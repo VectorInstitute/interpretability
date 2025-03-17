@@ -1,12 +1,6 @@
-import logging
-import torch.nn as nn
-import torch.nn.functional as F
-from typing import Optional
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-from transformers import AutoModel, AutoTokenizer
-import numpy as np
+import torch.nn.functional as F
 
 # Self-Attention block
 class SelfAttention(nn.Module):
@@ -39,7 +33,7 @@ class ResNetAttention(nn.Module):
         self.attention = SelfAttention(in_dim=512)  # Adjust channels based on ResNet block
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc1 = nn.Linear(512, 256)  # Output channels should match in_channels of attention layer
-        self.fc2 = nn.Linear(256, num_classes) 
+        self.fc2 = nn.Linear(256, num_classes)
 
     def forward(self, x):
         x = self.features(x)
@@ -49,36 +43,3 @@ class ResNetAttention(nn.Module):
         x = self.fc1(x)
         x = self.fc2(x)
         return x, attention
-    
-# extracted from: https://github.com/orobix/Prototypical-Networks-for-Few-shot-Learning-PyTorch/blob/master/src/protonet.py 
-def conv_block(in_channels, out_channels):
-    '''
-    returns a block conv-bn-relu-pool
-    '''
-    return nn.Sequential(
-        nn.Conv2d(in_channels, out_channels, 3, padding=1),
-        nn.BatchNorm2d(out_channels),
-        nn.ReLU(),
-        nn.MaxPool2d(2)
-    )
-
-
-class ProtoNet(nn.Module):
-    '''
-    Model as described in the reference paper,
-    source: https://github.com/jakesnell/prototypical-networks/blob/f0c48808e496989d01db59f86d4449d7aee9ab0c/protonets/models/few_shot.py#L62-L84
-    '''
-    def __init__(self, x_dim=3, hid_dim=64, z_dim=64):
-        super(ProtoNet, self).__init__()
-        self.encoder = nn.Sequential(
-            conv_block(x_dim, hid_dim),
-            conv_block(hid_dim, hid_dim),
-            conv_block(hid_dim, hid_dim),
-            conv_block(hid_dim, z_dim),
-        )
-
-    def forward(self, x):
-        x = self.encoder(x)
-        return x.view(x.size(0), -1)
-        
-
