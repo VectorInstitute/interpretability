@@ -106,9 +106,9 @@ def train_selfattention(model: ResNetAttention,
     no_disease_class_idx = train_dl.dataset.unique_labels.index('No Finding')
     num_unique_classes = len(train_dl.dataset.unique_labels)
     train_loss = 0.0
-    #model, optimizer, start_epoch, _ = load_checkpoint(model, optimizer, "new_16_new_self_attention.pth")
+    model, optimizer, start_epoch, _ = load_checkpoint(model, optimizer, "new_8_new_self_attention.pth")
 
-    for epoch in range(cfg.train_params.num_epochs):
+    for epoch in range(start_epoch+1, cfg.train_params.num_epochs):
         print(f'\nTraining Epoch {epoch} on device {device_id}..')
         model.train() 
 
