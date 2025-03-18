@@ -70,3 +70,4 @@ def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, 
         plt.savefig("td_auc.png")
 
     return np.mean(td_auc)
+

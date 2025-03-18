@@ -8,8 +8,9 @@ from lifelines.utils import concordance_index
 import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 
-from model import CoxNAM  # Import CoxNAM model
-from utils.loss import cox_loss  # Import Cox loss function
+from model import CoxNAM  
+from utils.loss import cox_loss 
+from utils.surv_utils import compute_baseline_survival, compute_final_survival_probabilities
 
 # Set seeds for reproducibility
 torch.manual_seed(42)
@@ -118,6 +119,9 @@ def evaluate_model(coxnam_model, X_test_tensor, duration_test, event_test):
     print(f"📊 Test C-index: {c_index:.4f}")
     return c_index
 
+
+
+
 # ---------------------------
 # Plot Shape Functions for Interpretability
 # ---------------------------
@@ -192,6 +196,35 @@ def main():
 
     # Plot shape functions
     feature_names = X_train.columns.tolist()
+    # Compute baseline survival function using training data
+    time_grid, H0, S0 = compute_baseline_survival(coxnam_model, X_train_tensor, duration_train_tensor, event_train_tensor)
+    print("Baseline survival function computed.")
+
+    # Optionally, plot the baseline survival function
+    plt.figure(figsize=(6, 4))
+    plt.step(time_grid, S0, where="post")
+    plt.xlabel("Time")
+    plt.ylabel("Baseline Survival Probability S0(t)")
+    plt.title("Estimated Baseline Survival Function")
+    plt.grid(True)
+    plt.savefig("baseline_survival_function.png", dpi=300)
+    plt.close()
+    print("Baseline survival plot saved to baseline_survival_function.png")
+
+    # Compute final survival probabilities for the test set
+    survival_probs_test = compute_final_survival_probabilities(coxnam_model, X_test_tensor, time_grid, H0)
+    # For example, plot survival curves for the first 5 test samples:
+    plt.figure(figsize=(8, 6))
+    for i in range(min(5, survival_probs_test.shape[0])):
+        plt.step(time_grid, survival_probs_test[i, :], where="post", label=f"Test sample {i+1}")
+    plt.xlabel("Time")
+    plt.ylabel("Survival Probability S(t|x)")
+    plt.title("Survival Curves for Test Samples")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("test_survival_curves_framingham.png", dpi=300)
+    plt.close()
+    print("Test survival curves plot saved to test_survival_curves.png")
     plot_shape_functions_and_distributions(coxnam_model, X_train.to_numpy(), feature_names)
     
     

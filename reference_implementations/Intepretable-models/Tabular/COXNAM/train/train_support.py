@@ -14,6 +14,8 @@ from tqdm import tqdm
 from model import CoxNAM
 from utils.loss import cox_loss  
 from utils.td_auc import compute_td_auc
+from utils.td_ci import compute_td_concordance_index
+from utils.surv_utils import compute_baseline_survival, compute_final_survival_probabilities
 
 
 def parse_args():
@@ -37,6 +39,7 @@ def parse_args():
 
 def load_and_prepare_data(file_path, test_size, device):
     # Load dataset
+    
     df = pd.read_csv(file_path)
     print("Dataset head:")
     print(df.head())
@@ -52,10 +55,25 @@ def load_and_prepare_data(file_path, test_size, device):
     # Identify categorical & numerical columns
     categorical_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
     numerical_cols = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
-
     # Impute missing values in categorical columns BEFORE encoding
     cat_imputer = SimpleImputer(strategy="most_frequent")
     X[categorical_cols] = cat_imputer.fit_transform(X[categorical_cols])
+
+    # Impute missing values in specific numerical columns with provided values
+    # According to the HBiostat Repository (https://hbiostat.org/data/repo/supportdesc, Professor Frank Harrell) 
+    # the following default values have been found to be useful in imputing missing baseline physiologic data:
+    impute_values = {
+        "alb": 3.5,
+        "pafi": 333.3,
+        "bili": 1.01,
+        "crea": 1.01,
+        "bun": 6.51,
+        "wblc": 9,  # in thousands
+        "urine": 2502
+    }
+    for col, value in impute_values.items():
+        if col in numerical_cols:
+            X.loc[:, col] = X[col].fillna(value)
 
     # One-hot encoding for categorical variables
     encoder = OneHotEncoder(handle_unknown="ignore", drop="first", sparse_output=False)
@@ -178,6 +196,7 @@ def evaluate_model(coxnam_model, X_test_tensor, duration_test, event_test, devic
 
     c_index = concordance_index(duration_test, -risk_scores_test, event_test)
     print(f"📊 Test C-index: {c_index:.4f}")
+    
     return c_index
 
 
@@ -264,12 +283,47 @@ def main():
             l2_lambda=args.l2_lambda,
             device=device,
             model_save_path=args.model_save_path,
-            patience=10  # You can adjust patience here if needed
+            patience=5  
         )
 
     # Evaluate the model
     evaluate_model(coxnam_model, X_test_tensor, duration_test_tensor, event_test_tensor,
                    device=device, model_save_path=args.model_save_path)
+    
+    # Compute baseline survival function using training data
+    time_grid, H0, S0 = compute_baseline_survival(coxnam_model, X_train_tensor, duration_train_tensor, event_train_tensor)
+    print("Baseline survival function computed.")
+    
+    
+    td_ci = compute_td_concordance_index(coxnam_model, X_test_tensor, duration_test_tensor, event_test_tensor, time_point=1024,
+                                            time_grid = time_grid, H0=H0)
+    print(f"📊 Time-dependent C-index at time 1024 days: {td_ci:.4f}")
+    
+    # Optionally, plot the baseline survival function
+    plt.figure(figsize=(6, 4))
+    plt.step(time_grid, S0, where="post")
+    plt.xlabel("Time")
+    plt.ylabel("Baseline Survival Probability S0(t)")
+    plt.title("Estimated Baseline Survival Function")
+    plt.grid(True)
+    plt.savefig("baseline_survival_function.png", dpi=300)
+    plt.close()
+    print("Baseline survival plot saved to baseline_survival_function.png")
+    
+    # Compute final survival probabilities for the test set
+    survival_probs_test = compute_final_survival_probabilities(coxnam_model, X_test_tensor, time_grid, H0)
+    # For example, plot survival curves for the first 5 test samples:
+    plt.figure(figsize=(8, 6))
+    for i in range(min(5, survival_probs_test.shape[0])):
+        plt.step(time_grid, survival_probs_test[i, :], where="post", label=f"Test sample {i+1}")
+    plt.xlabel("Time")
+    plt.ylabel("Survival Probability S(t|x)")
+    plt.title("Survival Curves for Test Samples")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("test_survival_curves.png", dpi=300)
+    plt.close()
+    print("Test survival curves plot saved to test_survival_curves.png")
 
     # Plot shape functions if requested
     if args.plot:
