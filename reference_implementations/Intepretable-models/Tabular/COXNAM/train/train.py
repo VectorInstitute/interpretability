@@ -58,8 +58,8 @@ def train_model(X_tensor, duration_tensor, event_tensor, num_epochs=50, batch_si
     # Define the Cox-NAM model
     num_features = X_tensor.shape[1]
     input_dim = 1
-    hidden_units = [32,16]  # Define the hidden units for each feature network
-    coxnam_model = CoxNAM(num_features, input_dim, hidden_units,dropout_rate=0.2).to(device)
+    hidden_units = [32,8]  # Define the hidden units for each feature network
+    coxnam_model = CoxNAM(num_features, input_dim, hidden_units,dropout_rate=0.01).to(device)
 
     # Define optimizer
     optimizer = optim.Adam(coxnam_model.parameters(), lr=0.001)

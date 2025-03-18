@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 import pandas as pd
-from lifelines.utils import concordance_index
+from lifelines.utils import concordance_index, brier_score
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
