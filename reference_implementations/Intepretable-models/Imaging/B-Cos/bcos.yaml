@@ -1,0 +1,22 @@
+data_dir: '/ssd003/projects/aieng/public/interp_bootcamp/datasets/isic_2016'
+train_dir: '/ssd003/projects/aieng/public/interp_bootcamp/datasets/isic_2016/train_set'
+test_dir: '/ssd003/projects/aieng/public/interp_bootcamp/datasets/isic_2016/test_set'
+train_csv: 'train_gt.csv'
+test_csv: 'test_gt.csv'
+output_dir: models/finetuned_weights
+output_file: fine_tuned_isic_bcos_resnet50.pth
+
+train_params:
+  num_workers: 1
+  resize: 224
+  num_epochs: 10
+  batch_size: 32
+  patience: 3
+  early_stopping: False
+
+optimizer:
+  learning_rate: 0.0001
+
+input_size: 224
+num_classes: 2 # Benign and Malignant
+freeze_features: False # Set True to freeze feature extractor
