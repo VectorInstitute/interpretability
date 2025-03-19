@@ -1,41 +1,36 @@
+import os
+import yaml
+import argparse
+from tqdm import tqdm
+
 import torch
+import ultraimport
 import torch.optim as optim
 import numpy as np
 import pandas as pd
-from lifelines.utils import concordance_index
 import matplotlib.pyplot as plt
+from lifelines.utils import concordance_index
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
-import argparse
-import os
-from tqdm import tqdm
 
-from model import CoxNAM
-from utils.loss import cox_loss  
-from utils.td_auc import compute_td_auc
+coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
+from coxnam.metrics import cox_loss, compute_td_auc
+from coxnam.model import CoxNAM
 
+def load_and_prepare_data(file_path: str,
+                          test_size: int,
+                          device: torch.device) -> tuple:
+    """ Load and prepare the dataset for training CoxNAM model.
+    Parameters:
+        file_path (str): Path to the dataset CSV file.
+        test_size (int): Test split size.
+        device (torch.device): Device to use for tensor operations.
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Train or load CoxNAM model with configurable settings.")
-    parser.add_argument("--pretrained", action="store_true", help="Bypass training and load pretrained model if available.")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--file_path", type=str, default="../datasets/support2.csv", help="Path to dataset CSV file")
-    parser.add_argument("--test_size", type=float, default=0.2, help="Test split size")
-    parser.add_argument("--num_epochs", type=int, default=30, help="Number of training epochs")
-    parser.add_argument("--batch_size", type=int, default=256, help="Training batch size")
-    parser.add_argument("--hidden_units", type=int, nargs='+', default=[64, 32, 16],
-                        help="Hidden units for each layer of the CoxNAM model")
-    parser.add_argument("--learning_rate", type=float, default=1e-3, help="Learning rate for optimizer")
-    parser.add_argument("--dropout_rate", type=float, default=0.2, help="Dropout rate for model")
-    parser.add_argument("--l1_lambda", type=float, default=0.02, help="L1 regularization lambda")
-    parser.add_argument("--l2_lambda", type=float, default=0.01, help="L2 regularization lambda")
-    parser.add_argument("--model_save_path", type=str, default="coxnam_model_epoch.pth", help="Path to save/load model")
-    parser.add_argument("--plot", type=bool, default=True, help="Generate plots for shape functions (default: True)")
-    return parser.parse_args()
-
-
-def load_and_prepare_data(file_path, test_size, device):
+    Returns:
+        tuple: A tuple containing training and testing tensors for features and target variables,
+               the processed feature dataframe, and the raw dataframe.
+    """
     # Load dataset
     df = pd.read_csv(file_path)
     print("Dataset head:")
@@ -99,8 +94,37 @@ def load_and_prepare_data(file_path, test_size, device):
             event_train_tensor, event_test_tensor, X_processed, df)
 
 
-def train_model(X_tensor, duration_tensor, event_tensor, hidden_units, num_epochs, batch_size,
-                learning_rate, dropout_rate, l1_lambda, l2_lambda, device, model_save_path, patience=10):
+def train_model(X_tensor: torch.tensor,
+                duration_tensor: torch.tensor,
+                event_tensor: torch.tensor,
+                hidden_units: list,
+                num_epochs: int,
+                batch_size: int,
+                learning_rate: float,
+                dropout_rate: float,
+                l1_lambda: float,
+                l2_lambda: float,
+                device: torch.device,
+                model_save_path: str,
+                patience: int=10) -> torch.nn.Module:
+    """ Train the CoxNAM model.
+    Parameters:
+        X_tensor: Training features tensor.
+        duration_tensor: Training survival times.
+        event_tensor: Training event indicators.
+        hidden_units: List of hidden units for each layer of the model.
+        num_epochs: Number of training epochs.
+        batch_size: Training batch size.
+        learning_rate: Learning rate for optimizer.
+        dropout_rate: Dropout rate for model.
+        l1_lambda: L1 regularization lambda.
+        l2_lambda: L2 regularization lambda.
+        device: Torch device.
+        model_save_path: Path to save the trained model.
+        patience: Early stopping patience.
+    Returns:
+        CoxNAM: Trained CoxNAM model.
+    """
     num_samples = X_tensor.shape[0]
     num_features = X_tensor.shape[1]
     input_dim = 1  # Each feature is a scalar
@@ -159,7 +183,23 @@ def train_model(X_tensor, duration_tensor, event_tensor, hidden_units, num_epoch
     return coxnam_model
 
 
-def evaluate_model(coxnam_model, X_test_tensor, duration_test, event_test, device, model_save_path):
+def evaluate_model(coxnam_model: torch.nn.Module,
+                   X_test_tensor: torch.tensor,
+                   duration_test: torch.tensor,
+                   event_test: torch.tensor,
+                   device: torch.device,
+                   model_save_path: str):
+    """ Evaluate the CoxNAM model on the test set.
+    Parameters:
+        coxnam_model: Trained CoxNAM model.
+        X_test_tensor: Test features tensor.
+        duration_test: Test survival times.
+        event_test: Test event indicators.
+        device: Torch device.
+        model_save_path: Path to saved model.
+    Returns:
+        float: Test C-index.
+    """
     if os.path.exists(model_save_path):
         print("Loading saved model for evaluation...")
         coxnam_model.load_state_dict(torch.load(model_save_path, map_location=device))
@@ -181,7 +221,20 @@ def evaluate_model(coxnam_model, X_test_tensor, duration_test, event_test, devic
     return c_index
 
 
-def plot_shape_functions_and_distributions(model, X, feature_names, device, output_plot):
+def plot_shape_functions_and_distributions(model: torch.nn.Module,
+                                           X: np.ndarray,
+                                           feature_names: list,
+                                           device: torch.device,
+                                           output_plot: str):
+    """
+    Plot shape functions and feature distributions for interpretability.
+    Parameters:
+        model: Trained CoxNAM model.
+        X: NumPy array of features.
+        feature_names: List of feature names.
+        device: Torch device.
+        output_plot: Path to save the plot.
+    """
     num_features = X.shape[1]
     ncols = min(4, int(np.ceil(np.sqrt(num_features))))
     nrows = int(np.ceil(num_features / ncols))
@@ -227,53 +280,64 @@ def plot_shape_functions_and_distributions(model, X, feature_names, device, outp
 
 
 def main():
-    args = parse_args()
+    """
+    Main function to train and evaluate the CoxNAM model.
+    """
+
+    #Get coxnam model config
+    yaml_file = os.path.join(os.path.dirname(__file__), 'coxnam.yaml')
+    with open(yaml_file, 'r') as f:
+        config = yaml.safe_load(f)
 
     # Set random seeds for reproducibility
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
+    torch.manual_seed(config['seed'])
+    np.random.seed(config['seed'])
     torch.backends.cudnn.deterministic = True
-    torch.cuda.manual_seed_all(args.seed)
+    torch.cuda.manual_seed_all(config['seed'])
 
     # Determine device
     device = torch.device("cuda" if torch.cuda.is_available() 
-                            else ("mps" if torch.backends.mps.is_available() else "cpu"))
+                            else ("mps" if torch.backends.mps.is_available()
+                            else "cpu"))
     print(f"Using device: {device}")
 
     # Load and prepare the data
+    data_file = os.path.join(config['data_dir'], config['data_file'])
     (X_train_tensor, X_test_tensor, duration_train_tensor, duration_test_tensor,
      event_train_tensor, event_test_tensor, X_imputed, df_raw) = load_and_prepare_data(
-        file_path=args.file_path, test_size=args.test_size, device=device)
+        file_path=data_file, test_size=config['test_size'], device=device)
 
-    if args.pretrained and os.path.exists(args.model_save_path):
+    if config['pretrained'] and os.path.exists(config['output_file']):
         print("Bypassing training and loading pretrained model.")
         coxnam_model = CoxNAM(X_train_tensor.shape[1], input_dim=1,
-                              hidden_units=args.hidden_units,
-                              dropout_rate=args.dropout_rate).to(device)
-        coxnam_model.load_state_dict(torch.load(args.model_save_path, map_location=device))
+                              hidden_units=config['train_params']['hidden_units'],
+                              dropout_rate=config['train_params']['dropout_rate']).to(device)
+        coxnam_model.load_state_dict(torch.load(config['output_file'], map_location=device))
     else:
         print("Training model from scratch...")
         coxnam_model = train_model(
             X_train_tensor, duration_train_tensor, event_train_tensor,
-            hidden_units=args.hidden_units,
-            num_epochs=args.num_epochs,
-            batch_size=args.batch_size,
-            learning_rate=args.learning_rate,
-            dropout_rate=args.dropout_rate,
-            l1_lambda=args.l1_lambda,
-            l2_lambda=args.l2_lambda,
+            hidden_units=config['train_params']['hidden_units'],
+            num_epochs=config['train_params']['num_epochs'],
+            batch_size=config['train_params']['batch_size'],
+            learning_rate=config['optimizer']['lr'],
+            dropout_rate=config['train_params']['dropout_rate'],
+            l1_lambda=config['train_params']['l1_lambda'],
+            l2_lambda=config['train_params']['l2_lambda'],
             device=device,
-            model_save_path=args.model_save_path,
-            patience=10  # You can adjust patience here if needed
+            model_save_path=config['output_file'],
+            patience=config['train_params']['patience']  # You can adjust patience here if needed
         )
 
     # Evaluate the model
     evaluate_model(coxnam_model, X_test_tensor, duration_test_tensor, event_test_tensor,
-                   device=device, model_save_path=args.model_save_path)
+                   device=device, model_save_path=config['output_file'])
 
     # Plot shape functions if requested
-    if args.plot:
-        output_plot = f"shape_functions_hidden{args.hidden_units}_lr{args.learning_rate}_dropout{args.dropout_rate}.png"
+    if config['plot']:
+        output_plot = f"""shape_functions_hidden{config['train_params']['hidden_units']}
+                        _lr{config['optimizer']['lr']}\
+                        _dropout{config['train_params']['dropout_rate']}.png"""
         feature_names = X_imputed.columns.tolist()
         plot_shape_functions_and_distributions(coxnam_model, X_imputed.to_numpy(),
                                                feature_names, device=device, output_plot=output_plot)
