@@ -68,7 +68,6 @@ def get_predictions(model: torch.nn.Module,
     x_true, x_probs = [], []
     with torch.set_grad_enabled(False):
         for _, (features,labels) in enumerate(X):
-            print('get_predictions: {device}')
             features, labels = features.to(device), labels.to(device)
             logits, _ = model.forward(features)
             prob = torch.sigmoid(logits)
@@ -113,7 +112,7 @@ def train_and_predict(model: torch.nn.Module,
 
     for epoch in range(cfgs['train_params']['epochs']):
         model.train()
-
+        print('Training on epoch: ', epoch)
         for _,(features,labels) in enumerate(train): 
             features, labels= features.to(device),labels.to(device)
             logits, _ = model.forward(features)

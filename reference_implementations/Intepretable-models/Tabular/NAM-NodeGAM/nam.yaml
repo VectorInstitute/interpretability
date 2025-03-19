@@ -1,5 +1,5 @@
 #Change to your working directory
-data_dir: /Users/ananyaraval/workspace/check_interp/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets/US_130
+data_dir: ~/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets/US_130
 data_file: diabetic_data.csv
 output_file: nam.pkl
 nam:
