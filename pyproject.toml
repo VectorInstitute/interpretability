@@ -13,6 +13,7 @@ dependencies = [
     "imgaug>=0.4.0",
     "interpret>=0.6.9",
     "jupyter>=1.1.1",
+    "kaleido==0.2.1",
     "lifelines>=0.30.0",
     "lime>=0.2.0.1",
     "matplotlib>=3.10.0",
