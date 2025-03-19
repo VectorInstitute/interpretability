@@ -1,0 +1,24 @@
+#Change to your working directory
+data_dir: /Users/ananyaraval/workspace/check_interp/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets/US_130
+data_file: diabetic_data.csv
+output_file: nam.pkl
+nam:
+  dropout: 0
+  n_basis_functions: 1000
+  feature_dropout: 0
+  shallow_layer: relu
+  hidden_layer: relu
+  units_multiplier: 64
+
+train_params:
+  seed: 11
+  epochs: 10
+  step_size: 5
+  batch_size: 512
+
+optimizer:
+  lr: 0.001
+
+scheduler:
+  gamma: 0.995
+  step_size: 1

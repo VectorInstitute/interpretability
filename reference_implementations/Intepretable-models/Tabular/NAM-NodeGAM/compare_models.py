@@ -1,6 +1,9 @@
+import os
+import yaml
 from collections import Counter
 from typing import Union, List, Tuple, Dict
 
+import ultraimport
 import pandas as pd
 import numpy as np
 import xgboost as xgb
@@ -11,12 +14,20 @@ from imblearn.over_sampling import RandomOverSampler
 from interpret.glassbox import ExplainableBoostingClassifier
 from sklearn.metrics import f1_score, roc_auc_score, precision_score, recall_score
 
-from data import Config, process_us_130_csv
+nam = ultraimport.create_ns_package('nam', '__dir__/nam')
+from nam.data_utils import *
 
 def plot_features(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
                   fold: int,
                   feature_names: List) -> None:
-    """
+    """ Plot feature importance
+    Parameters:
+        - model: Model to get feature importance from.
+        - fold: Fold number.
+        - feature_names: Names of features.
+    
+        Returns:
+        - None
     """
     if isinstance(model, xgb.XGBClassifier):
         importances = model.feature_importances_
@@ -35,7 +46,12 @@ def plot_features(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier]
 
 def get_classifier(explainable: bool = False
                     ) -> Union[xgb.XGBClassifier, ExplainableBoostingClassifier]:
-    """
+    """ Get classifier to fit a model
+    Parameters:
+        - explainable: Whether to use ExplainableBoostingClassifier.
+
+    Returns:
+        - Model to fit.
     """
     if explainable:
         ebm = ExplainableBoostingClassifier(
@@ -55,7 +71,17 @@ def get_classifier(explainable: bool = False
 def get_predictions(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
                     X_train: pd.DataFrame,
                     X_test: pd.DataFrame) -> Tuple:
-    """
+    """ Get predictions from model
+    Parameters:
+        - model: Model to get predictions from.
+        - X_train: Training data.
+        - X_test: Testing data.
+    
+    Returns:
+        - y_te_prob: Predicted probabilities for test data.
+        - y_te_pred: Predicted labels for test data.
+        - y_tr_pred: Predicted labels for training data.
+        - y_tr_prob: Predicted probabilities for training data.
     """
     y_te_pred = model.predict(X_test)
     y_te_prob = model.predict_proba(X_test)[:,1]
@@ -66,7 +92,13 @@ def get_predictions(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifie
 
 def get_top_features(X_train: pd.DataFrame,
                      y_train: pd.DataFrame)-> List:
-    """
+    """ Get top features using Lasso
+    Parameters:
+        - X_train: Training data.
+        - y_train: Training labels.
+
+    Returns:
+        - top_feats: List of top features.
     """
     lasso = Lasso(alpha=0.0001)
     smote = RandomOverSampler(random_state=42)
@@ -85,7 +117,15 @@ def train_and_predict(model: Union[xgb.XGBClassifier, ExplainableBoostingClassif
                       y: pd.DataFrame,
                       visualize: bool = False) -> Dict:
     
-    """
+    """ Train and predict using NAM model.
+    Parameters:
+        - model: Model to train and predict.
+        - X: Data.
+        - y: Labels.
+        - visualize: Whether to visualize feature importance.
+
+    Returns:
+        - Dictionary with scores.
     """
     auc, f1, precision, recall = [], [], [], []
 
@@ -135,15 +175,14 @@ def train_and_predict(model: Union[xgb.XGBClassifier, ExplainableBoostingClassif
 
 if __name__ == '__main__':
 
-    #Get data config
-    config = Config()
-    data_files = config.get_datafiles('us_130')
-    file_path = data_files['diabetic_data.csv']
+    #Get nam model config
+    yaml_file = os.path.join(os.path.dirname(__file__), 'nam.yaml')
+    with open(yaml_file, 'r') as f:
+        config = yaml.safe_load(f)
 
     #Read data
-    data = pd.read_csv(file_path)
-
-    #Pre-process data
+    data_file = os.path.join(config['data_dir'], config['data_file'])
+    data = pd.read_csv(data_file)
     df = process_us_130_csv(data)
     
     #Separate training data and labels
