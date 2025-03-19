@@ -1,0 +1,26 @@
+data_dir: ~/check-interp/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets
+data_file: support2.csv
+framingham_file: framingham.csv
+output_file: coxnam_model_epoch.pth
+
+train_params:
+  hidden_units: [32,16,8] #framingham
+  #hidden_units: [64, 32, 16]
+  #num_epochs: 30
+  num_epochs: 50 #framingham
+  input_dim: 1 #framingham
+  #batch_size: 256
+  batch_size: 128 #framingham
+  dropout_rate: 0.2
+  l1_lambda: 0.02
+  l2_lambda: 0.01
+  patience: 10
+
+optimizer:
+  lr: 0.001
+  weight_decay: 0.01
+
+seed: 42
+test_size: 0.2
+pretrained: False
+plot: True
