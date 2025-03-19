@@ -367,7 +367,7 @@ def _resnet(
         # 1. Construct local file path
         local_dir = os.path.join(
             os.path.dirname(__file__),
-            "models/pretrained_weights")
+            "../models/pretrained_weights")
         
         url = URLS[arch]  # e.g. "https://.../resnet_50-ead259efe4.pth"
         filename = os.path.basename(url)  # "resnet_50-ead259efe4.pth"
