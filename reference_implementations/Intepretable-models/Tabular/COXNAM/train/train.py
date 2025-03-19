@@ -1,4 +1,5 @@
 import torch
+import ultraimport
 import torch.optim as optim
 import numpy as np
 import pandas as pd
@@ -7,7 +8,9 @@ from lifelines.datasets import load_rossi
 from lifelines.utils import concordance_index
 import matplotlib.pyplot as plt
 
-from coxnam import CoxNAM, cox_loss
+coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
+from coxnam.model import CoxNAM
+from coxnam.metrics import cox_loss
 
 # Set random seeds
 np.random.seed(42)
