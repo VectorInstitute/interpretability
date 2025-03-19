@@ -248,7 +248,10 @@ def main():
     torch.cuda.manual_seed_all(seed)  # Ensures CUDA ops use the same seed
 
     # Train model on training set
-    coxnam_model = train_model(X_train_tensor, duration_train_tensor, event_train_tensor)
+    coxnam_model = train_model(X_train_tensor, duration_train_tensor,
+                               event_train_tensor,
+                               num_epochs=config['train_params']['num_epochs'],
+                               batch_size=config['train_params']['batch_size'])
 
     # Evaluate on test set
     evaluate_model(coxnam_model, X_test_tensor, duration_test_tensor.numpy(), event_test_tensor.numpy())
