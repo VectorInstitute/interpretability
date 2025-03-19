@@ -302,7 +302,7 @@ def main():
     print(f"Using device: {device}")
 
     # Load and prepare the data
-    data_file = os.path.join(config['data_dir'], config['data_file'])
+    data_file = os.path.join(config['data_dir'], config['support_file'])
     (X_train_tensor, X_test_tensor, duration_train_tensor, duration_test_tensor,
      event_train_tensor, event_test_tensor, X_imputed, df_raw) = load_and_prepare_data(
         file_path=data_file, test_size=config['test_size'], device=device)
@@ -336,8 +336,7 @@ def main():
     # Plot shape functions if requested
     if config['plot']:
         output_plot = f"""shape_functions_hidden{config['train_params']['hidden_units']}
-                        _lr{config['optimizer']['lr']}\
-                        _dropout{config['train_params']['dropout_rate']}.png"""
+        _lr{config['optimizer']['lr']}_dropout{config['train_params']['dropout_rate']}.png"""
         feature_names = X_imputed.columns.tolist()
         plot_shape_functions_and_distributions(coxnam_model, X_imputed.to_numpy(),
                                                feature_names, device=device, output_plot=output_plot)
