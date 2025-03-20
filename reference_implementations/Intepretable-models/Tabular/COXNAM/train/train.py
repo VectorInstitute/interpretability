@@ -1,7 +1,5 @@
-# train.py
-
-
 import torch
+import ultraimport
 import torch.optim as optim
 import numpy as np
 import pandas as pd
@@ -10,8 +8,9 @@ from lifelines.datasets import load_rossi
 from lifelines.utils import concordance_index
 import matplotlib.pyplot as plt
 
-from model import CoxNAM # Import CoxNAM from the model package
-from utils.loss import cox_loss  # Import cox_loss from the utils package
+coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
+from coxnam.model import CoxNAM
+from coxnam.metrics import cox_loss
 
 # Set random seeds
 np.random.seed(42)
@@ -21,9 +20,22 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 # Set device
-device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() \
+                      else "mps" if torch.backends.mps.is_available()\
+                      else "cpu")
 
-def load_and_prepare_data():
+def load_and_prepare_data() -> tuple:
+    """
+    Load the Rossi dataset and prepare it for training the Cox-NAM model.
+
+    Returns:
+    - X_tensor: PyTorch tensor of data
+    - y_tensor: PyTorch tensor of target variable
+    - duration_tensor: PyTorch tensor of duration feature
+    - event_tensor: PyTorch tensor of event feature
+    - X: DataFrame of features
+    - df: Original DataFrame
+    """
     # Load the dataset
     df = load_rossi()
     print(df.info())
@@ -54,7 +66,24 @@ def load_and_prepare_data():
 
     return X_tensor, y_tensor, duration_tensor, event_tensor, X, df
 
-def train_model(X_tensor, duration_tensor, event_tensor, num_epochs=50, batch_size=64):
+def train_model(X_tensor: torch.tensor,
+                duration_tensor: torch.tensor,
+                event_tensor: torch.tensor,
+                num_epochs: int = 50,
+                batch_size: int = 64) -> torch.nn.Module:
+    """
+    Train the Cox-NAM model on the provided data.
+
+    Parameters:
+    - X_tensor: PyTorch tensor of data
+    - duration_tensor: PyTorch tensor of duration feature
+    - event_tensor: PyTorch tensor of event feature
+    - num_epochs: Number of epochs to train the model
+    - batch_size: Batch size for training
+
+    Returns:
+    - coxnam_model: Trained Cox-NAM
+    """
     # Define the Cox-NAM model
     num_features = X_tensor.shape[1]
     input_dim = 1
@@ -92,7 +121,20 @@ def train_model(X_tensor, duration_tensor, event_tensor, num_epochs=50, batch_si
     print("Training complete!")
     return coxnam_model
 
-def evaluate_model(coxnam_model, X_tensor, duration, event):
+def evaluate_model(coxnam_model: torch.nn.Module,
+                   X_tensor: torch.tensor,
+                   duration: np.ndarray,
+                   event: np.ndarray) -> float:
+    """ Evaluate the Cox-NAM model using the C-index.
+
+    Parameters:
+    - coxnam_model: Trained Cox-NAM model
+    - X_tensor: PyTorch tensor of data
+    - duration: Pandas Series of duration feature
+    - event: Pandas Series of event feature
+    Returns:
+    - c_index: C-index of the model
+    """
     # Evaluate the model
     coxnam_model.eval()
     with torch.no_grad():
@@ -103,7 +145,18 @@ def evaluate_model(coxnam_model, X_tensor, duration, event):
     print(f"C-index: {c_index:.4f}")
     return c_index
 
-def plot_shape_functions_and_distributions(model, X, feature_names):
+def plot_shape_functions_and_distributions(model: torch.nn.Module,
+                                           X: pd.DataFrame,
+                                           feature_names: list) -> None:
+    """
+    Plot the learned shape functions and feature distributions for a CoxNAM model.
+    Parameters:
+    - model: Trained CoxNAM model
+    - X: DataFrame of features
+    - feature_names: List of feature names
+    Returns:
+    - None
+    """
     num_features = X.shape[1]
     
     # Determine grid size for plotting
@@ -157,9 +210,17 @@ def plot_shape_functions_and_distributions(model, X, feature_names):
     plt.savefig('rossi_shape_functions.png', dpi=300)
 
 
-def local_explanation(coxnam_model, x_instance):
+def local_explanation(coxnam_model: torch.nn.Module,
+                      x_instance: torch.tensor) -> tuple:
     """
-    x_instance: 1D tensor of shape (num_features,)
+    Compute the local explanation for a single instance using a trained CoxNAM model.
+    Parameters:
+    - coxnam_model: Trained CoxNAM model
+    - x_instance: 1D tensor of shape (num_features,)
+    
+    Returns:
+    - contributions: List of feature contributions
+    - total_risk: Total risk score for the instance
     """
     # Ensure model is in evaluation mode
     coxnam_model.eval()
@@ -183,28 +244,25 @@ def local_explanation(coxnam_model, x_instance):
     return contributions, total_risk
 
 
-def plot_local_explanation_bar(coxnam_model, 
-                               x_instance, 
-                               feature_names,
-                               sort_features=False,
-                               title="Local Explanation: Feature Contributions"):
+def plot_local_explanation_bar(coxnam_model: torch.nn.Module, 
+                               x_instance: torch.tensor, 
+                               feature_names: list,
+                               sort_features: bool = False,
+                               title: str ="Local Explanation: Feature Contributions"):
     """
     Plots the local (instance-level) feature contributions for a CoxNAM model
     as a horizontal bar chart.
 
-    Parameters
-    ----------
-    coxnam_model : CoxNAM
-        A trained CoxNAM model that has a list of feature_networks.
-    x_instance : torch.Tensor
-        A 1D tensor of shape (num_features,) containing the feature values for 
+    Parameters:
+    coxnam_model : A trained CoxNAM model that has a list of feature_networks.
+    x_instance : A 1D tensor of shape (num_features,) containing the feature values for 
         the specific instance you want to explain.
-    feature_names : list of str
-        A list of feature names corresponding to the order of features in x_instance.
-    sort_features : bool, optional
-        Whether to sort features by their contribution (descending). Default is False.
-    title : str, optional
-        Title of the plot.
+    feature_names : A list of feature names corresponding to the order of features in x_instance.
+    sort_features : Whether to sort features by their contribution (descending). Default is False.
+    title: Title of the plot.
+
+    Returns:
+    None
     """
 
     coxnam_model.eval()  # Set model to evaluation mode
@@ -249,10 +307,10 @@ def plot_local_explanation_bar(coxnam_model,
     plt.tight_layout()
     plt.savefig('rossi_local_explanation.png', dpi=300)
 
-
-
-
 def main():
+    """
+    Main function to load data, train the model, evaluate the model, and plot the shape functions
+    """
     X_tensor, y_tensor, duration_tensor, event_tensor, X, df = load_and_prepare_data()
     coxnam_model = train_model(X_tensor, duration_tensor, event_tensor)
     evaluate_model(coxnam_model, X_tensor, df['week'].values, df['arrest'].values)

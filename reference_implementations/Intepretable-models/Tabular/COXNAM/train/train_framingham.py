@@ -1,4 +1,7 @@
+import os
+import yaml
 import torch
+import ultraimport
 import torch.optim as optim
 import numpy as np
 import pandas as pd
@@ -8,19 +11,29 @@ from lifelines.utils import concordance_index
 import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 
-from model import CoxNAM  # Import CoxNAM model
-from utils.loss import cox_loss  # Import Cox loss function
-
-# Set seeds for reproducibility
-torch.manual_seed(42)
-np.random.seed(42)
-torch.backends.cudnn.deterministic = True
-torch.cuda.manual_seed_all(42)  # Ensures CUDA ops use the same seed
+coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
+from coxnam.metrics import cox_loss
+from coxnam.model import CoxNAM
 
 # ---------------------------
 # Load and Preprocess Data (with Train-Test Split)
 # ---------------------------
-def load_and_prepare_data(file_path="../datasets/framingham.csv", test_size=0.2):
+def load_and_prepare_data(file_path: str="../../datasets/framingham.csv",
+                          test_size: float=0.2) -> tuple:
+    """
+    Load the Framingham dataset and perform preprocessing steps:
+    - Impute missing values using median imputation
+    - Split into train and test sets
+    - Normalize features using StandardScaler
+    - Convert to PyTorch tensors
+    
+    Parameters:
+        file_path (str): Path to the Framingham dataset CSV file
+        test_size (float): Fraction of data to reserve for test set
+    Returns:
+        tuple: data, duration and event tensors for train and test sets,
+        original train and test dataframes
+    """
     # Load the dataset
     df = pd.read_csv(file_path)
 
@@ -59,7 +72,21 @@ def load_and_prepare_data(file_path="../datasets/framingham.csv", test_size=0.2)
 # ---------------------------
 # Train CoxNAM Model
 # ---------------------------
-def train_model(X_tensor, duration_tensor, event_tensor, num_epochs=150, batch_size=128, l1_lambda=0.01):
+def train_model(X_tensor: torch.tensor,
+                duration_tensor: torch.tensor,
+                event_tensor: torch.tensor,
+                num_epochs: int=150,
+                batch_size: int=128):
+    """ Train the CoxNAM model on the training set
+    Parameters:
+        X_tensor (torch.tensor): Training set features
+        duration_tensor (torch.tensor): Training set survival times
+        event_tensor (torch.tensor): Training set event indicators
+        num_epochs (int): Number of training epochs
+        batch_size (int): Mini-batch size
+    Returns:
+        torch.nn.Module: Trained CoxNAM model
+    """
     num_samples = X_tensor.shape[0]
     num_features = X_tensor.shape[1]
     input_dim = 1  # Each feature is a scalar
@@ -86,7 +113,8 @@ def train_model(X_tensor, duration_tensor, event_tensor, num_epochs=150, batch_s
             # Forward pass on the full dataset to compute risk scores
             risk_scores_full = coxnam_model(X_tensor)
 
-            loss = cox_loss(risk_scores_full, duration_tensor, event_tensor, coxnam_model, mini_batch_indices=mini_batch_indices)
+            loss = cox_loss(risk_scores_full, duration_tensor, event_tensor,
+                            coxnam_model, mini_batch_indices=mini_batch_indices)
 
 
             # Check for numerical issues
@@ -108,7 +136,19 @@ def train_model(X_tensor, duration_tensor, event_tensor, num_epochs=150, batch_s
 # ---------------------------
 # Evaluate Model Performance
 # ---------------------------
-def evaluate_model(coxnam_model, X_test_tensor, duration_test, event_test):
+def evaluate_model(coxnam_model: torch.nn.Module,
+                   X_test_tensor: torch.Tensor,
+                   duration_test: np.ndarray,
+                   event_test: np.ndarray) -> float:
+    """ Evaluate the model on the test set using concordance index (C-index)
+    Parameters:
+        coxnam_model (torch.nn.Module): Trained CoxNAM model
+        X_test_tensor (torch.Tensor): Test set features
+        duration_test (np.ndarray): Test set survival times
+        event_test (np.ndarray): Test set event indicators
+    Returns:
+        float: C-index on the test set
+    """
     coxnam_model.eval()
     with torch.no_grad():
         risk_scores_test = coxnam_model(X_test_tensor).numpy().flatten()
@@ -121,7 +161,15 @@ def evaluate_model(coxnam_model, X_test_tensor, duration_test, event_test):
 # ---------------------------
 # Plot Shape Functions for Interpretability
 # ---------------------------
-def plot_shape_functions_and_distributions(model, X, feature_names):
+def plot_shape_functions_and_distributions(model: torch.nn.Module,
+                                           X: np.ndarray,
+                                           feature_names: list):
+    """ Plot the shape functions and feature distributions for interpretability
+    Parameters:
+        model (torch.nn.Module): Trained CoxNAM model
+        X (np.ndarray): Training set features
+        feature_names (list): List of feature names
+    """
     num_features = X.shape[1]
 
     # Dynamically determine grid size (balanced aspect ratio)
@@ -181,11 +229,29 @@ def plot_shape_functions_and_distributions(model, X, feature_names):
 # Main Function
 # ---------------------------
 def main():
+    """ Main function to load data, train model, evaluate and plot shape functions
+    """
+    #Get coxnam model config
+    yaml_file = os.path.join(os.path.dirname(__file__), 'coxnam.yaml')
+    with open(yaml_file, 'r') as f:
+        config = yaml.safe_load(f)
+
+    data_file = os.path.join(config['data_dir'], config['framingham_file'])
     (X_train_tensor, X_test_tensor, duration_train_tensor, duration_test_tensor,
-     event_train_tensor, event_test_tensor, X_train, X_test, df) = load_and_prepare_data("../datasets/framingham.csv")
+     event_train_tensor, event_test_tensor, X_train, X_test, df) = load_and_prepare_data(data_file)
+    
+    # Set seeds for reproducibility
+    seed = config['seed']
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.cuda.manual_seed_all(seed)  # Ensures CUDA ops use the same seed
 
     # Train model on training set
-    coxnam_model = train_model(X_train_tensor, duration_train_tensor, event_train_tensor)
+    coxnam_model = train_model(X_train_tensor, duration_train_tensor,
+                               event_train_tensor,
+                               num_epochs=config['train_params']['num_epochs'],
+                               batch_size=config['train_params']['batch_size'])
 
     # Evaluate on test set
     evaluate_model(coxnam_model, X_test_tensor, duration_test_tensor.numpy(), event_test_tensor.numpy())
@@ -193,9 +259,6 @@ def main():
     # Plot shape functions
     feature_names = X_train.columns.tolist()
     plot_shape_functions_and_distributions(coxnam_model, X_train.to_numpy(), feature_names)
-    
-    
- 
 
 if __name__ == "__main__":
     main()
