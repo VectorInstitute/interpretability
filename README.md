@@ -24,13 +24,16 @@ Here is the list of the covered topics:
     - PDP
     - ALE
     - Integrated Gradients
+    - Counterfactual Explanations
     
 
 - Interpretable-models
     - GAM
     - NAM
     - EBM
+    - GOSDT/GHOUL
     - COXNAM
+    - NBM
     - ProtoPNet
     - B-COS Networks
 
