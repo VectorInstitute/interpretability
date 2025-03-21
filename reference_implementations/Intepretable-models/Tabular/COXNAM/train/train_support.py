@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 import pandas as pd
-from lifelines.utils import concordance_index, brier_score
+from lifelines.utils import concordance_index
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
@@ -12,9 +12,9 @@ import os
 from tqdm import tqdm
 
 from model import CoxNAM
-from utils.loss import cox_loss  
-from utils.td_auc import compute_td_auc
-from utils.td_ci import compute_td_concordance_index
+from utils.metrics import cox_loss  
+from utils.metrics import compute_td_auc
+from utils.metrics import compute_td_concordance_index
 from utils.surv_utils import compute_baseline_survival, compute_final_survival_probabilities
 
 
