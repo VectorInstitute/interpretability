@@ -18,7 +18,7 @@ coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
 from coxnam.metrics import compute_td_auc
 from coxnam.model import CoxNAM
 from coxnam.loss import cox_loss
-from coxnam.td_ci import compute_td_concordance_index
+from coxnam.metrics import compute_td_concordance_index
 from coxnam.plots import plot_baseline_survival
 from coxnam.surv_utils import compute_baseline_survival, compute_final_survival_probabilities
 
