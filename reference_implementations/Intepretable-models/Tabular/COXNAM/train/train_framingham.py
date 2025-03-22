@@ -12,8 +12,10 @@ import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 
 coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
-from coxnam.metrics import cox_loss
+from coxnam.loss import cox_loss
 from coxnam.model import CoxNAM
+from coxnam.surv_utils import *
+from coxnam.plots import *
 
 # ---------------------------
 # Load and Preprocess Data (with Train-Test Split)
@@ -159,73 +161,6 @@ def evaluate_model(coxnam_model: torch.nn.Module,
     return c_index
 
 # ---------------------------
-# Plot Shape Functions for Interpretability
-# ---------------------------
-def plot_shape_functions_and_distributions(model: torch.nn.Module,
-                                           X: np.ndarray,
-                                           feature_names: list):
-    """ Plot the shape functions and feature distributions for interpretability
-    Parameters:
-        model (torch.nn.Module): Trained CoxNAM model
-        X (np.ndarray): Training set features
-        feature_names (list): List of feature names
-    """
-    num_features = X.shape[1]
-
-    # Dynamically determine grid size (balanced aspect ratio)
-    ncols = min(4, int(np.ceil(np.sqrt(num_features))))  # Up to 4 columns
-    nrows = int(np.ceil(num_features / ncols))  # Compute rows
-
-    fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 3 * nrows))
-    axes = np.array(axes).flatten()
-
-    for i in range(num_features):
-        ax = axes[i]
-        feature_network = model.feature_networks[i]
-        feature_network.eval()
-
-        feature_values = X[:, i]
-        feature_mean = np.mean(feature_values)
-        feature_std = np.std(feature_values)
-
-        # Define range for plotting shape functions
-        sample_inputs = np.linspace(-3, 3, 100).reshape(-1, 1)
-        with torch.no_grad():
-            sample_inputs_tensor = torch.tensor(sample_inputs, dtype=torch.float32)
-            shape_values = feature_network(sample_inputs_tensor).numpy()
-
-        # Convert sample inputs back to original scale
-        orig_sample_inputs = sample_inputs * feature_std + feature_mean
-
-        # Plot histogram
-        ax.hist(feature_values, bins=30, alpha=0.7, color='b', density=True)
-
-        # Plot shape function
-        ax2 = ax.twinx()
-        ax2.plot(orig_sample_inputs, shape_values, color='r')
-
-        ax.set_xlabel('Feature Value', fontsize=8)
-        ax.set_ylabel('Density', fontsize=8)
-        ax2.set_ylabel('Shape Function', fontsize=8)
-        ax.set_title(feature_names[i], fontsize=10)
-        ax.tick_params(axis='both', which='major', labelsize=8)
-        ax.grid(True)
-
-    # Hide any unused subplots
-    for j in range(num_features, len(axes)):
-        axes[j].axis('off')
-
-    handles = [plt.Line2D([0], [0], color='b', lw=3, label='Distribution'),
-               plt.Line2D([0], [0], color='r', lw=3, label='Shape Function')]
-
-    fig.legend(handles=handles, loc='upper center', ncol=2, fontsize=8)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
-    
-    # Save the figure
-    plt.savefig('framingham_shape_functions.png', dpi=300)
-    plt.show()
-    
-# ---------------------------
 # Main Function
 # ---------------------------
 def main():
@@ -258,6 +193,15 @@ def main():
 
     # Plot shape functions
     feature_names = X_train.columns.tolist()
+
+    # Compute baseline survival function using training data
+    time_grid, H0, S0 = compute_baseline_survival(coxnam_model, X_train_tensor, duration_train_tensor, event_train_tensor)
+    plot_baseline_survival(time_grid, S0)
+
+    # Compute final survival probabilities for the test set
+    survival_probs_test = compute_final_survival_probabilities(coxnam_model, X_test_tensor, time_grid, H0)
+    plot_survival_curve(survival_probs_test, time_grid)
+
     plot_shape_functions_and_distributions(coxnam_model, X_train.to_numpy(), feature_names)
 
 if __name__ == "__main__":

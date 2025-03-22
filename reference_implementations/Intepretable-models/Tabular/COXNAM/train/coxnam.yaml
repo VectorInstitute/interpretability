@@ -1,4 +1,4 @@
-data_dir: ~/workspace/check_interp/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets
+data_dir: ~/workspace/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets
 data_file: US_130/diabetic_data.csv
 framingham_file: framingham.csv #For train_framingham
 support_file: support2.csv #For train_support
@@ -16,7 +16,7 @@ train_params:
   dropout_rate: 0.2
   l1_lambda: 0.02
   l2_lambda: 0.01
-  patience: 10
+  patience: 5
 
 optimizer:
   lr: 0.001
