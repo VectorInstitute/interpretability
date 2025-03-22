@@ -15,8 +15,13 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 
 coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
-from coxnam.metrics import cox_loss, compute_td_auc
+from coxnam.metrics import compute_td_auc
 from coxnam.model import CoxNAM
+from coxnam.loss import cox_loss
+from coxnam.td_ci import compute_td_concordance_index
+from coxnam.plots import plot_baseline_survival
+from coxnam.surv_utils import compute_baseline_survival, compute_final_survival_probabilities
+
 
 def load_and_prepare_data(file_path: str,
                           test_size: int,
@@ -52,6 +57,22 @@ def load_and_prepare_data(file_path: str,
     cat_imputer = SimpleImputer(strategy="most_frequent")
     X[categorical_cols] = cat_imputer.fit_transform(X[categorical_cols])
 
+    # Impute missing values in specific numerical columns with provided values
+    # According to the HBiostat Repository (https://hbiostat.org/data/repo/supportdesc, Professor Frank Harrell) 
+    # the following default values have been found to be useful in imputing missing baseline physiologic data:
+    impute_values = {
+        "alb": 3.5,
+        "pafi": 333.3,
+        "bili": 1.01,
+        "crea": 1.01,
+        "bun": 6.51,
+        "wblc": 9,  # in thousands
+        "urine": 2502
+    }
+    for col, value in impute_values.items():
+        if col in numerical_cols:
+            X.loc[:, col] = X[col].fillna(value)
+
     # One-hot encoding for categorical variables
     encoder = OneHotEncoder(handle_unknown="ignore", drop="first", sparse_output=False)
     X_categorical = encoder.fit_transform(X[categorical_cols])
@@ -63,9 +84,11 @@ def load_and_prepare_data(file_path: str,
     X_numerical_imputed = pd.DataFrame(num_imputer.fit_transform(X[numerical_cols]), 
                                        columns=numerical_cols, index=X.index)
 
+    
+
     # Combine numerical and categorical features
     X_processed = pd.concat([X_numerical_imputed, X_categorical], axis=1)
-    
+
     # Drop features due to multicollinearity
     X_processed = X_processed.drop(columns=['hospdead', 'dzgroup_Coma', 'surv6m', 'surv2m', 'dzclass_Coma'])
 
@@ -333,6 +356,14 @@ def main():
     evaluate_model(coxnam_model, X_test_tensor, duration_test_tensor, event_test_tensor,
                    device=device, model_save_path=config['output_file'])
 
+    # Compute baseline survival function using training data
+    time_grid, H0, S0 = compute_baseline_survival(coxnam_model, X_train_tensor, duration_train_tensor, event_train_tensor)
+    print("Baseline survival function computed.")
+
+    td_ci = compute_td_concordance_index(coxnam_model, X_test_tensor, duration_test_tensor, event_test_tensor, time_point=1024,
+                                            time_grid = time_grid, H0=H0)
+    print(f"📊 Time-dependent C-index at time 1024 days: {td_ci:.4f}")
+
     # Plot shape functions if requested
     if config['plot']:
         output_plot = f"""shape_functions_hidden{config['train_params']['hidden_units']}
@@ -340,6 +371,7 @@ def main():
         feature_names = X_imputed.columns.tolist()
         plot_shape_functions_and_distributions(coxnam_model, X_imputed.to_numpy(),
                                                feature_names, device=device, output_plot=output_plot)
+        plot_baseline_survival(time_grid, S0)
 
 
 if __name__ == "__main__":
