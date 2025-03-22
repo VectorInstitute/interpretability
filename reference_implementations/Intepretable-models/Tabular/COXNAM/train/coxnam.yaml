@@ -1,22 +1,24 @@
-data_dir: ~/workspace/check_interp/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets
+data_dir: ~/workspace/interpretability-bootcamp/reference_implementations/Intepretable-models/Tabular/datasets
 data_file: US_130/diabetic_data.csv
 framingham_file: framingham.csv #For train_framingham
 support_file: support2.csv #For train_support
 output_file: nam.pkl
 
 train_params:
-  hidden_units: [32,16,8] #framingham
+  #hidden_units: [32,16,8] #framingham
+  hidden_units: [32,8] #train.py
   #hidden_units: [64, 32, 16]
   #num_epochs: 30
   num_epochs: 150 #framingham
   num_epochs: 50 #framingham_10year
-  input_dim: 1 #framingham
+  input_dim: 1 #framingham, train.py
   #batch_size: 256
   batch_size: 128 #framingham
-  dropout_rate: 0.2
+  #dropout_rate: 0.2
+  dropout_rate: 0.01 #train.py
   l1_lambda: 0.02
   l2_lambda: 0.01
-  patience: 10
+  patience: 5
 
 optimizer:
   lr: 0.001

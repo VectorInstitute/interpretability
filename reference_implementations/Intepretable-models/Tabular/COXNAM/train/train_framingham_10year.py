@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 
 coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
-from coxnam.metrics import cox_loss
+from coxnam.loss import cox_loss
 from coxnam.model import CoxNAM
 
 # ---------------------------

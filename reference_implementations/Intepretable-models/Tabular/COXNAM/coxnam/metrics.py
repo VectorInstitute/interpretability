@@ -2,67 +2,6 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from sksurv.metrics import cumulative_dynamic_auc
-from sksurv.util import Surv
-
-def cox_loss(risk_scores, duration, event, model, l2_lambda=0.01, l1_lambda=0.01, mini_batch_indices=None):
-    """
-    Compute the Cox loss with L2 and L1 regularization, using observed events sorted by descending duration.
-    
-    Parameters:
-        risk_scores (Tensor): Model output (log hazards).
-        duration (Tensor): Survival times.
-        event (Tensor): Event indicators (1 if event occurred, 0 if censored).
-        model (nn.Module): The CoxNAM model (used for regularization).
-        l2_lambda (float): L2 regularization strength.
-        l1_lambda (float): L1 regularization strength.
-        mini_batch_indices (Tensor, optional): Indices for mini-batch sampling.
-    
-    Returns:
-        Tensor: Computed loss value.
-    """
-    # Ensure risk_scores is a 1D tensor.
-    if risk_scores.ndim > 1:
-        risk_scores = risk_scores.squeeze()
-
-    # If mini-batch indices are provided, select the corresponding entries.
-    if mini_batch_indices is not None:
-        risk_scores = risk_scores[mini_batch_indices]
-        duration = duration[mini_batch_indices]
-        event = event[mini_batch_indices]
-
-    # Filter to include only observed events.
-    observed_mask = (event == 1)
-    risk_scores_obs = risk_scores[observed_mask]
-    duration_obs = duration[observed_mask]
-
-    epsilon = 1e-6  # For numerical stability
-
-    # Sort the observed events by descending duration.
-    # This ordering ensures that the cumulative sum of exp(risk) represents the risk set:
-    # all subjects with durations >= current event's duration.
-    sorted_indices = torch.argsort(duration_obs, descending=True)
-    sorted_risk_scores = risk_scores_obs[sorted_indices]
-
-    # Compute cumulative sum of exponentiated risk scores.
-    exp_risk_scores = torch.exp(sorted_risk_scores)
-    cumsum_exp_risk_scores = torch.cumsum(exp_risk_scores, dim=0) + epsilon
-
-    # Compute the log partial likelihood.
-    log_likelihood = torch.sum(sorted_risk_scores - torch.log(cumsum_exp_risk_scores))
-
-    # Compute regularization penalties.
-    l2_penalty = sum(torch.sum(param ** 2) for param in model.parameters())
-    l1_penalty = sum(torch.sum(torch.abs(param)) for param in model.parameters())
-
-    # Final loss: negative log-likelihood with regularization.
-    total_loss = -log_likelihood + l2_lambda * l2_penalty + l1_lambda * l1_penalty
-
-    # Debug: Return zero loss if NaN/Inf is detected.
-    if torch.isnan(total_loss) or torch.isinf(total_loss):
-        print("Warning: NaN detected in Cox loss. Returning zero loss.")
-        return torch.tensor(0.0, dtype=torch.float32, requires_grad=True)
-
-    return total_loss
 
 def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, duration_test_tensor, event_train_tensor, event_test_tensor, epoch=None, plot=True):
     """
@@ -129,3 +68,72 @@ def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, 
         plt.savefig("td_auc.png")
 
     return np.mean(td_auc)
+
+def compute_td_concordance_index(model, X, durations, events, time_point, time_grid, H0):
+    """
+    Optimized version of time-dependent concordance index (TD-CI).
+    
+    Uses NumPy vectorization instead of nested loops for efficiency.
+
+    Args:
+        model: Trained CoxNAM model.
+        X: Feature tensor for evaluation.
+        durations: Numpy array (or list) of event times.
+        events: Numpy array (or list) of event indicators (1 for event, 0 for censored).
+        time_point: The time at which to compute survival probabilities.
+        time_grid: Array of time points used for baseline hazard estimation.
+        H0: Array of cumulative baseline hazard values corresponding to time_grid.
+
+    Returns:
+        td_c_index: The time-dependent concordance index (float). Returns None if no comparable pairs.
+    """
+    # Ensure model is in evaluation mode
+    model.eval()
+    with torch.no_grad():
+        risk_scores = model(X).cpu().numpy().flatten()
+    
+    # Interpolate to get the cumulative hazard at time_point
+    H0_t = np.interp(time_point, time_grid, H0)
+    
+    # Compute survival probabilities: S(t|x) = exp(-H0(t) * exp(h(x)))
+    S_pred = np.exp(-H0_t * np.exp(risk_scores))
+
+    # Convert durations & events to numpy if they are tensors
+    durations = durations.cpu().numpy().flatten() if isinstance(durations, torch.Tensor) else np.array(durations).flatten()
+    events = events.cpu().numpy().flatten() if isinstance(events, torch.Tensor) else np.array(events).flatten()
+
+    # Select only individuals with observed events before time_point
+    event_mask = (events == 1) & (durations <= time_point)
+    
+    if np.sum(event_mask) == 0:
+        print("No comparable pairs found for the specified time_point.")
+        return None
+    
+    event_times = durations[event_mask]
+    survival_probs_event = S_pred[event_mask]
+
+    # Sort by event times
+    sorted_indices = np.argsort(event_times)
+    event_times = event_times[sorted_indices]
+    survival_probs_event = survival_probs_event[sorted_indices]
+
+    # Select only individuals who have not yet experienced the event
+    risk_mask = durations > np.expand_dims(event_times, axis=1)  # Compare each event time to all other durations
+    num_comparable = np.sum(risk_mask, axis=1)
+
+    if np.sum(num_comparable) == 0:
+        return None  # No valid comparisons
+
+    # Get the survival probabilities for those at risk
+    survival_probs_risk = S_pred[np.newaxis, :] * risk_mask  # Masked array where survival probabilities exist only for those at risk
+
+    # Compare survival probabilities
+    correct_order = (survival_probs_event[:, np.newaxis] < survival_probs_risk)  # Lower survival probability = higher risk
+    tie_cases = (survival_probs_event[:, np.newaxis] == survival_probs_risk)
+
+    # Count correct pairs
+    num_correct = np.sum(correct_order, axis=1) + 0.5 * np.sum(tie_cases, axis=1)
+
+    # Compute the final time-dependent concordance index
+    td_c_index = np.sum(num_correct) / np.sum(num_comparable)
+    return td_c_index

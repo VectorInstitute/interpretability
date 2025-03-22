@@ -1,3 +1,6 @@
+import os
+import yaml
+
 import torch
 import ultraimport
 import torch.optim as optim
@@ -10,7 +13,7 @@ import matplotlib.pyplot as plt
 
 coxnam = ultraimport.create_ns_package('coxnam', '__dir__/../coxnam')
 from coxnam.model import CoxNAM
-from coxnam.metrics import cox_loss
+from coxnam.loss import cox_loss
 
 # Set random seeds
 np.random.seed(42)
@@ -66,7 +69,8 @@ def load_and_prepare_data() -> tuple:
 
     return X_tensor, y_tensor, duration_tensor, event_tensor, X, df
 
-def train_model(X_tensor: torch.tensor,
+def train_model(config: dict,
+                X_tensor: torch.tensor,
                 duration_tensor: torch.tensor,
                 event_tensor: torch.tensor,
                 num_epochs: int = 50,
@@ -75,6 +79,7 @@ def train_model(X_tensor: torch.tensor,
     Train the Cox-NAM model on the provided data.
 
     Parameters:
+    - config: Configuration dictionary for the Cox-NAM model
     - X_tensor: PyTorch tensor of data
     - duration_tensor: PyTorch tensor of duration feature
     - event_tensor: PyTorch tensor of event feature
@@ -86,9 +91,10 @@ def train_model(X_tensor: torch.tensor,
     """
     # Define the Cox-NAM model
     num_features = X_tensor.shape[1]
-    input_dim = 1
-    hidden_units = [32,16]  # Define the hidden units for each feature network
-    coxnam_model = CoxNAM(num_features, input_dim, hidden_units,dropout_rate=0.2).to(device)
+    dropout = config['train_params']['dropout_rate']
+    input_dim = config['train_params']['input_dim']
+    hidden_units = config['train_params']['hidden_units']  # Define the hidden units for each feature network
+    coxnam_model = CoxNAM(num_features, input_dim, hidden_units,dropout_rate=dropout).to(device)
 
     # Define optimizer
     optimizer = optim.Adam(coxnam_model.parameters(), lr=0.001)
@@ -311,8 +317,14 @@ def main():
     """
     Main function to load data, train the model, evaluate the model, and plot the shape functions
     """
+
+    #Get coxnam model config
+    yaml_file = os.path.join(os.path.dirname(__file__), 'coxnam.yaml')
+    with open(yaml_file, 'r') as f:
+        config = yaml.safe_load(f)
+
     X_tensor, y_tensor, duration_tensor, event_tensor, X, df = load_and_prepare_data()
-    coxnam_model = train_model(X_tensor, duration_tensor, event_tensor)
+    coxnam_model = train_model(config, X_tensor, duration_tensor, event_tensor)
     evaluate_model(coxnam_model, X_tensor, df['week'].values, df['arrest'].values)
     feature_names = X.columns.tolist()
     plot_shape_functions_and_distributions(coxnam_model, X.to_numpy(), feature_names)
