@@ -7,6 +7,8 @@ requires-python = ">=3.10"
 dependencies = [
     "argparse>=1.4.0",
     "captum>=0.7.0",
+    "dice-ml>=0.9",
+    "dnamite>=1.0.5",
     "gosdt>=1.0.1",
     "graphviz>=0.20.3",
     "imblearn>=0.0",
@@ -27,6 +29,7 @@ dependencies = [
     "pyale>=1.2.0",
     "pygam>=0.9.1",
     "python-box[all]~=7.0",
+    "pytorch-tabnet>=4.1.0",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
     "shap>=0.46.0",
