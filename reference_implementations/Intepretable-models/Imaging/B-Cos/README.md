@@ -8,6 +8,18 @@
 - [bcos.yaml](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Imaging/B-Cos/bcos.yaml) yaml file with configs to run bcos training scripts.
 - [bcos](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/reference_implementations/Intepretable-models/Imaging/B-Cos/bcos) folder contains class files for the dataset, bcos model class etc.
 - [models](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/reference_implementations/Intepretable-models/Imaging/B-Cos/models) contains pretrained and finetuned weights for BCOS model.
+- [utils](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/reference_implementations/Intepretable-models/Imaging/utils) contains utility scripts for all imaging techniques.
+
+## Running the scripts
+- Change file paths and parameters values within the [bcos.yaml](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Imaging/B-Cos/bcos.yaml) file.
+- Login to a GPU node on the cluster
+```bash
+srun --pty --mem=20GB -c50 --gres=gpu:1 --qos=normal -t 8:00:00 /bin/bash
+```
+- Run the training script
+```bash
+python isic_fine_tune.py
+```
 
 ## Datasets
 - The dataset can be downloaded from the [ISIC 2016 Challenge website](https://challenge.isic-archive.com/data/). 
