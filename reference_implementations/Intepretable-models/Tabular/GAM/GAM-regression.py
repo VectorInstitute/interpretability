@@ -30,7 +30,7 @@ np.random.seed(42)
 # -----------------------------
 def load_data():
     # Adjust the path as needed
-    return pd.read_csv('../../datasets/insurance/insurance.csv')
+    return pd.read_csv('../datasets/insurance/insurance.csv')
 
 def preprocess_data(data):
     # Make copies to preserve original numerical values
