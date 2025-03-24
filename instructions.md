@@ -1,4 +1,4 @@
-This is a step-by-step guide to run the examples and training code present in the repository.
+This is a step-by-step guide to run the examples and training code present in the repository. Any specific instructions to run a code within a folder will be present in the folder's `README.md`.
 
 ## Running on the cluster
 
@@ -20,7 +20,7 @@ ipython kernel install --user --name=interp_bootcamp
 deactivate
 ```
 
-**[Optional]** You can create your own environment using the instructions below and create a kernel with it.
+**[Optional]:** You can create your own environment using the instructions below and create a kernel with it.
 
 ### Use Jupyter Hub for Notebooks
 
@@ -39,7 +39,7 @@ srun --pty --mem=30GB -c 5 --gres=gpu:1 --qos=normal -t 8:00:00 /bin/bash
 source  /ssd003/projects/aieng/public/interp_bootcamp/venv/bin/activate
 ```
 
-**[Optional]** You can also source your own environment if you have created it manually.
+**[Optional]:** You can also source your own environment if you have created it manually.
 
 8. Run any python script within the repository. For e.g.
 ```python
