@@ -8,7 +8,7 @@ This repository contains code and images demonstrating the use of Explainable Bo
 - [bmi.png](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/bmi.png) shows importance and density plot for `bmi` feature.
 - [glucose.png](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/glucose.png) shows importance and density plot for `glucose` feature.
 - [pedigree.png](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/pedigree.png) shows importance and density plot for `DiabetesPedigreeFunction` feature.
-- [emb_model.pkl](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/ebm_model.pkl) is a trained EBM model.
+- [ebm_model.pkl](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/ebm_model.pkl) is a trained EBM model.
 
 ## Dataset
 - [Diabetes data](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/datasets/diabetes.csv)

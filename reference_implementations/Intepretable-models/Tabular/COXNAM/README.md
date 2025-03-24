@@ -19,11 +19,15 @@ This repository contains the implementation of the CoxNAM model using PyTorch. T
 ```bash
 srun --pty --mem=20GB -c 2 --gres=gpu:1 --qos=normal -t 8:00:00 /bin/bash
 ```
+- Source the virtual environment
+```bash
+source /ssd003/projects/aieng/public/interp_bootcamp/venv/bin/activate
+```
 - Run script via `python` command
 ```bash
 python train_support.py
 ```
-### Dataset
+## Dataset
 
 1. SUPPORT2:
 
