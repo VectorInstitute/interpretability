@@ -10,4 +10,4 @@
 #SBATCH --output=job_%x_%j.out
 #SBATCH --error=job_%x_%j.err
 
-python reference_implementations/Intepretable-models/Tabular/NAM-NodeGAM/train_nam.py
+python ../reference_implementations/Intepretable-models/Tabular/NAM-NodeGAM/train_nam.py

@@ -67,11 +67,13 @@ source /ssd003/projects/aieng/public/interp_bootcamp/venv/bin/activate
 3. Large datasets used within the repository are present at the location `/ssd003/projects/aieng/public/interp_bootcamp/datasets`. 
 4. Pretrained models are available at the location `/ssd003/projects/aieng/public/interp_bootcamp/checkpoints`. 
 
->[!NOTE] If you face any issues with the pre-requisites or are unable to access any of the cluster resources, please contact your facilitator.
+>[!NOTE]
+>- If you face any issues with the pre-requisites or are unable to access any of the cluster resources, please contact your facilitator.
 
 ## Running the code
 
 Please follow the steps in [instructions.md](instructions.md) to run the examples in this repository.
+Please follow steps in [scripts.md](scripts.md]) to run slurm scripts.
 
 ## License
 This project is licensed under the terms of the [LICENSE.md](LICENSE.md) file located in the root directory of this repository.

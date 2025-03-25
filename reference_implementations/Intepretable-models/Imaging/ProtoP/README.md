@@ -8,7 +8,7 @@ Prototypical Networks creates a classifier by learning a new metric space that t
 ## Datasets
 - [MNIST](https://www.kaggle.com/datasets/hojjatk/mnist-dataset)
     - This dataset is present on the Vector cluster at the following path `/ssd003/projects/aieng/public/interp_bootcamp/datasets/MNIST`.
-    - If you are running scripts on your laptop, you need to download the dataset from the link above.
+    - If you are running scripts on your laptop, you need to download the dataset from the link above and preprocess it. Else, you can copy the dataset from the cluster to your machine.
 
 >[!NOTE]
 >- The prototypical network training code isn't available at the moment. It will be added to the repository after the bootcamp. Please contact the facilitators if this is needed urgently.
