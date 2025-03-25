@@ -1,26 +1,24 @@
-# Generalized Additive Models (GAM) for Interpretable Machine Learning
-
-This Jupyter notebook provides a comprehensive guide to using Generalized Additive Models (GAM) for interpretable machine learning on tabular data.
-
-## Table of Contents
-- [Generalized Additive Models (GAM) for Interpretable Machine Learning](#generalized-additive-models-gam-for-interpretable-machine-learning)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [What is a GAM?](#what-is-a-gam)
-  - [Why Use GAMs?](#why-use-gams)
-  - [References](#references)
-
-## Introduction
-Interpretable machine learning is crucial for understanding and trusting model predictions. This notebook focuses on Generalized Additive Models (GAM), a powerful method for creating interpretable models for tabular data.
-
-## What is a GAM?
+# Method
 A Generalized Additive Model (GAM) is a type of statistical model that combines the properties of generalized linear models with additive models. It allows for flexible, non-linear relationships between the dependent and independent variables while maintaining interpretability.
 
-## Why Use GAMs?
-- **Interpretability**: GAMs provide clear insights into how each feature affects the prediction.
-- **Flexibility**: They can model non-linear relationships without losing interpretability.
-- **Transparency**: Easy to visualize and understand the contribution of each feature.
+## Resources
+- [gam-jupyter](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/gam-jupyter.ipynb) notebook focuses on Generalized Additive Models (GAM), a powerful method for binary classification for Adult dataset.
+- [gam-regression](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/gam-regression.ipynb) contains an exmaple of using GAMs to predict medical costs.  
+- [GAM-regression.py](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/GAM-regression.py) is a python script of the Jupyter notebook.
+- [label_encoders.pkl](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/label_encoders.pkl) is used for data preprocessing to convert categorical variables to integers.
 
+## Running the scripts
+- Source the virtual environment
+```bash
+source /ssd003/projects/aieng/public/interp_bootcamp/venv/bin/activate
+```
+- Run script via `python` command
+```bash
+python GAM-regression.py
+```
+## Datasets
+- [Adult dataset](https://archive.ics.uci.edu/dataset/2/adult)
+- [Medical Cost Personal Dataset](https://www.kaggle.com/datasets/mirichoi0218/insurance)
 
 ## References
 - Hastie, T., & Tibshirani, R. (1990). Generalized Additive Models. Chapman and Hall/CRC.

@@ -2,7 +2,7 @@ data_dir: ~/workspace/interpretability-bootcamp/reference_implementations/Intepr
 data_file: US_130/diabetic_data.csv
 framingham_file: framingham.csv #For train_framingham
 support_file: support2.csv #For train_support
-output_file: nam.pkl
+output_file: coxnam_model_epoch.pth
 
 train_params:
   #hidden_units: [32,16,8] #framingham

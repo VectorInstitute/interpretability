@@ -1,49 +1,22 @@
-# Interpretable Models: Explainable Boosting Machine (EBM)
+## Method
 
-This repository contains a Jupyter Notebook demonstrating the use of Explainable Boosting Machine (EBM) on tabular data.
+This repository contains code and images demonstrating the use of Explainable Boosting Machine (EBM) on tabular data.
 
-## Contents
+## Resources
+- [EBM-jupyter.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/emb-jupyter.ipynb) notebook that provides a step-by-step guide on how to use EBM for interpreting tabular data.
+- [age.png](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/age.png) shows importance and density plot for `age` feature.
+- [bmi.png](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/bmi.png) shows importance and density plot for `bmi` feature.
+- [glucose.png](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/glucose.png) shows importance and density plot for `glucose` feature.
+- [pedigree.png](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/pedigree.png) shows importance and density plot for `DiabetesPedigreeFunction` feature.
+- [ebm_model.pkl](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/EBM/ebm_model.pkl) is a trained EBM model.
 
-- `EBM-jupyter.ipynb`: A Jupyter Notebook that provides a step-by-step guide on how to use EBM for interpreting tabular data.
-
-## Getting Started
-
-To get started with the EBM demonstration, follow these steps:
-
-1. **Clone the repository**:
-    ```bash
-    git clone https://github.com/yourusername/interpretability-bootcamp.git
-    cd interpretability-bootcamp/reference_implementations/Interpretable-models/Tabular/EBM
-    ```
-
-2. **Launch Jupyter Notebook**:
-    ```bash
-    jupyter notebook
-    ```
-    Open the `EBM-jupyter.ipynb` notebook to follow along with the demonstration.
-
-## Notebook Overview
-
-The `EBM-jupyter.ipynb` notebook covers the following:
-
-- **Introduction to EBM**: An overview of Explainable Boosting Machine and its importance in model interpretability.
-- **Data Preparation**: Steps to load and preprocess the tabular data.
-- **Model Training**: Instructions on how to train an EBM model on the prepared data.
-- **Model Evaluation**: Techniques to evaluate the performance of the EBM model.
-- **Interpretability**: Methods to interpret the results and understand the model's predictions.
+## Dataset
+- [Diabetes data](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/datasets/diabetes.csv)
 
 ## References
 
 - [InterpretML Documentation](https://interpret.ml/docs/ebm.html): Official documentation for Explainable Boosting Machine.
 - [EBM Paper](https://arxiv.org/abs/1909.09223): Research paper on Explainable Boosting Machine.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- The InterpretML team for developing the EBM model.
-- Contributors to the `interpretability-bootcamp` repository.
 
 

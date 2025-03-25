@@ -1,20 +1,3 @@
 ## Interpretable ML using Post-hoc methods ##
 
-This directory contains example notebooks and explanations demonstrating 5 Post-hoc methods on tabular and imaging datasets.
-
-### Methods
-
--  Accumulated Local Effects (ALE): This model-agnostic global explanation method evaluates the relationship between feature values and target variables by handling feature correlations using averaging and accumulating the difference in predictions across the conditional distribution of features. The notebook [ALE-jupyter.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Post-hoc/acc_local_effects/ALE-jupyter.ipynb) demonstrates this technique using [PyALE](https://github.com/DanaJomar/PyALE) library on a [Bank marketing dataset](https://archive.ics.uci.edu/static/public/222/bank+marketing.zip) for loan prediction using ALE plots.
-
--  Partial Dependence Plots (PDP): This plot shows the marginal effect a feature has on the predicted outcome of a machine learning model by marginalizing the model output over a feature distribution subset. The notebook [PDP-jupyter.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Post-hoc/partial_dependence_plots/PDP-jupyter.ipynb) computes PDPs and explains predictions of Linear regression and Gradient boosting regressor models on [California housing dataset](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_california_housing.html) for house price prediction.
-
--  Local Interpretable Model Agnostic Explanations (LIME): This method attempts to explain individual predictions by fitting a surrogate interpretable model that gives good approximate predictions of the underlying black box model locally. The notebook [LIME-jupyter.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Post-hoc/LIME/LIME-jupyter.ipynb) trains a Gradient Boosting Regressor model on [Gas sensor turbine data](https://archive.ics.uci.edu/dataset/551/gas+turbine+co+and+nox+emission+data+set) to predict turbine energy yield, and shows local and global explanations provided by LIME.
-
--  Integrated Gradients (IG): This method aims to attribute an importance value to each input feature of a machine learning model based on the gradients of the model output with respect to the input.
-	-  The notebook [ig-imaging-jupyter.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Post-hoc/integrated_gradients/ig-imaging-jupyter.ipynb) computes integrated gradients and shows feature attributions on 2 types of images (cars and xray).
-	-  The notebook [ig-tabular.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Post-hoc/integrated_gradients/ig-tabular-jupyter.ipynb) shows local and global feature importance plots for predictions made by a Neural Network on the tabular [Bank marketing dataset](https://archive.ics.uci.edu/static/public/222/bank+marketing.zip).
-
--  SHapley Additive exPlanations (SHAP): This method uses a game theoretic approach that measures each player's contribution to the final outcome by assigning an importance value that represents its contribution.
-	-  The notebook [shap-jupyter.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Post-hoc/SHAP/shap-jupyter.ipynb) trains a GBDT model on [DHI](https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset) dataset for heart failure prediction, and shows summary plots and local and global interpretations computed by TreeSHAP.
-	-  The notebook [shap-nn-jupyter.ipynb](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Post-hoc/SHAP/shapp-nn-jupyter.ipynb) trains an MLP on [Credit card dataset](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients) for default prediction, and provides explanation and summary plots computed by Kernel Explainer SHAP method.
-
+This directory contains example notebooks and explanations demonstrating 6 Post-hoc methods on tabular and imaging datasets. More information is present in each directory.
