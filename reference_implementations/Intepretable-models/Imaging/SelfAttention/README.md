@@ -2,6 +2,7 @@
 - This method integrates a trainable self-attention module into the last layer of ResNet architecture, modifying its feature extraction process.
 
 ## Resources
+- [Self_attention](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Imaging/SelfAttention/Self_attention.ipynb) contains an example of Self attention architecture on ResNet, along with demonstrations of heatmap generated on chest xray images.
 - [selfattention.yaml](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Imaging/SelfAttention/selfattention.yaml) contains configuration for training selfattention model.
 - [resnetattention.py](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Imaging/SelfAttention/resnetattention.py) is the model file containing the definition of ResNet Attention.
 - [train_nih.py](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Imaging/SelfAttention/train_nih.py) is a training script for ResNetAttention to NIH dataset.
@@ -15,7 +16,7 @@ srun --pty --mem=100GB -c 20 --gres=gpu:4 --qos=normal -t 8:00:00 /bin/bash
 ```
 - Run script via `torchrun` command
 ```bash
- torchrun --standalone --nproc-per-node=4 --nnodes=1 ../interpretability-bootcamp/reference_implementations/Intepretable-models/Imaging/SelfAttention/train_nih.py
+ torchrun --standalone --nproc-per-node=4 --nnodes=1 ~/interpretability-bootcamp/reference_implementations/Intepretable-models/Imaging/SelfAttention/train_nih.py
 ```
 
 >[Note]
