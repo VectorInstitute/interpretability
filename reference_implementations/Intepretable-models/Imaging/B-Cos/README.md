@@ -16,7 +16,7 @@
 ```bash
 srun --pty --mem=30GB -c5 --gres=gpu:1 --qos=normal -t 8:00:00 /bin/bash
 ```
--Source the bootcamp environment
+- Source the bootcamp environment
 ```bash
 source /ssd003/projects/aieng/public/interp_bootcamp/venv/bin/activate
 ```

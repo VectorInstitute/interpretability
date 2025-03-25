@@ -19,9 +19,9 @@ srun --pty --mem=100GB -c 20 --gres=gpu:4 --qos=normal -t 8:00:00 /bin/bash
  torchrun --standalone --nproc-per-node=4 --nnodes=1 ~/interpretability-bootcamp/reference_implementations/Intepretable-models/Imaging/SelfAttention/train_nih.py
 ```
 
->[Note]
--< # of GPUs in `srun` command == # nproc-per-node in `torchrun` command
--< Max available is 4 GPUs on 1 node.
+>[!Note]
+>- # of GPUs in `srun` command == # nproc-per-node in `torchrun` command
+>- Max available is 4 GPUs on 1 node.
 
 ## Dataset
 - [NIH Dataset](https://www.kaggle.com/datasets/nih-chest-xrays/data/data)
