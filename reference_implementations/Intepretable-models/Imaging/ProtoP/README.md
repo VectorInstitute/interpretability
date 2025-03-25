@@ -12,3 +12,9 @@ Prototypical Networks creates a classifier by learning a new metric space that t
 
 >[!NOTE]
 >- The prototypical network training code isn't available at the moment. It will be added to the repository after the bootcamp. Please contact the facilitators if this is needed urgently.
+
+>- If you are running the notebook on your laptop, you will need to copy the checkpoint from the cluster using the following command:
+
+```bash
+scp user@vremote.vectorinstitute.ai:/ssd003/projects/aieng/public/interp_bootcamp/checkpoints/proto_mnist.pth .
+```
