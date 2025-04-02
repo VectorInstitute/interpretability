@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Method
 A Counterfactual explanation can be used to explain predictions of individual instances by describing a smallest change to feature values that changes the prediction to a predefined output.
 
@@ -10,3 +11,6 @@ A Counterfactual explanation can be used to explain predictions of individual in
 - [NIH Dataset](https://www.kaggle.com/datasets/nih-chest-xrays/data/data)
     -  This dataset is present on the cluster at the following path `/ssd003/projects/aieng/public/interp_bootcamp/datasets/NIH`. 
     - If you are running scripts on your laptop, you need to download the dataset from the link above.
+=======
+
+>>>>>>> d366a8ab9f90c3cd09dd87a20a056004f940ded4
