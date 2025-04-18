@@ -3,31 +3,7 @@
 
 import torch
 from torch.nn import functional as F
-from utils.utils import prototype_heatmap
-
-
-
-def euclidean_dist(x, y):
-    '''
-    Compute euclidean distance between two tensors
-    '''
-    # x: N x D
-    # y: M x D
-    n = x.size(0)
-    m = y.size(0)
-    d = x.size(1)
-    if d != y.size(1):
-        raise Exception
-
-    x = x.unsqueeze(1).expand(n, m, d)
-    y = y.unsqueeze(0).expand(n, m, d)
-
-    return torch.pow(x - y, 2).sum(2)
-
-
-
-
-
+from utils.visualize import prototype_heatmap
 
 # Compute prototype representations
 def compute_prototypes(support_set, model):
@@ -43,7 +19,6 @@ def compute_prototypes(support_set, model):
         ])
     return prototypes, unique_classes
 
-
 def euclidean_dist(x, y):
     '''
     Compute euclidean distance between two tensors
@@ -55,15 +30,10 @@ def euclidean_dist(x, y):
     d = x.size(1)
     if d != y.size(1):
         raise Exception
-
     x = x.unsqueeze(1).expand(n, m, d)
     y = y.unsqueeze(0).expand(n, m, d)
-
     return torch.pow(x - y, 2).sum(2)
     
-
-
-
 # Compute classification loss and accuracy
 def compute_loss_and_accuracy(query_set, prototypes, model,unique_classes,visualize_heatmap):
     query_images = torch.stack([q[0] for q in query_set]).to(model.device)
@@ -75,7 +45,6 @@ def compute_loss_and_accuracy(query_set, prototypes, model,unique_classes,visual
     # Map query labels to indices in unique_classes (since they may be non-sequential)
     class_to_index = {cls.item(): idx for idx, cls in enumerate(unique_classes)}
     mapped_labels = torch.tensor([class_to_index[label.item()] for label in query_labels], device=model.device)
-
     loss = F.cross_entropy(-distances, mapped_labels)
     # Compute accuracy using mapped indices
     pred_indices = torch.argmin(distances, dim=1)  # Closest prototype index

@@ -1,11 +1,4 @@
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Optional
-import torch
-import torch.nn as nn
-import numpy as np
-
-
 
 class ProtoNet(nn.Module):
     def __init__(self):
@@ -22,7 +15,4 @@ class ProtoNet(nn.Module):
         )
 
     def forward(self, x):
-        return self.encoder(x)
-
-        
-    
+        return self.encoder(x)   

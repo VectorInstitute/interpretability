@@ -22,8 +22,4 @@ export TORCH_NCCL_ASYNC_ERROR_HANDLING=1 # set to 1 for NCCL backend
 export PYTHONPATH="."
 nvidia-smi
 
-
-# python main_tabnet.py
-# python main.py
-# python trad_model.py
 torchrun --nproc-per-node=4 --nnodes=1 main_proto.py 
