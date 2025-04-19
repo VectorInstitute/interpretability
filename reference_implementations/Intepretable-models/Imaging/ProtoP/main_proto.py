@@ -20,40 +20,14 @@ from losses.losses import compute_prototypes, compute_loss_and_accuracy
 from utils.dist_utils import setup, cleanup
 from utils.model_utils import load_checkpoint, save_checkpoint
 from utils.utils import set_random_seed
+import yaml
 plt.rcParams['figure.figsize'] = [25, 10]
+import warnings
+warnings.filterwarnings("ignore")
 
 
 
-def make_parser():
-    parser = argparse.ArgumentParser(description='Imaging Explainability')
-    parser.add_argument('--output_dir', type=str, default='results', help='Output directory')
-    parser.add_argument('--num_workers', type=int, default=4, help='number of workers')
-    parser.add_argument('--resize', type=int, default=224, help='Resizing images')
-    parser.add_argument('--experiment', type=str, default="baseline", help='Imaging Experiment')
 
-    # Training
-    parser.add_argument('--batch_size', type=int, default=64, help='batch size')
-    parser.add_argument('--lr', type=float, default=1e-4, help='initial learning rate')
-    parser.add_argument('--scheduler', default=False, action='store_true', help='[USE] scheduler')
-    parser.add_argument('--step_size', type=int, default=5, help='scheduler step size')
-
-    ## UNET Specific arguments.
-    parser.add_argument('--gamma', type=float, default=1.0, help='Used to set the weighting value between the classifier and the segmentation in Unet')
-    parser.add_argument('--model_teacher', type=str, default='timm-efficientnet-b0', help='model_teacher')
-    parser.add_argument('--pretrained_name', type=str, default='noisy-student', help='model pretrained value')
-    parser.add_argument('--dropout', type=float, default=0.5, help='dropout')
-    parser.add_argument('--second_loss', type=str, default='ce', choices=['dice', 'ce'], help='Segmentation loss')
-
-    # Misc
-    parser.add_argument('--gpus', type=str, default='7', help='Which gpus to use, -1 for CPU')
-    parser.add_argument('--viz', default=False, action='store_true', help='[USE] Vizdom')
-    parser.add_argument('--gcam_viz', default=False, action='store_true', help='[USE] Used for displaying the GradCam results')
-    parser.add_argument('--test', default=False, action='store_true', help='[USE] flag for testing only')
-    parser.add_argument('--testdir', type=str, default=None, help='model to test [same as train if not set]')
-    parser.add_argument('--rseed', type=int, default=42, help='Seed for reproducibility')
-    parser.add_argument('--weight_decay', type=int, default=1e-5, help='Seed for reproducibility')
-    parser.add_argument('--num_epochs', type=int, default=1, help='Seed for reproducibility')
-    return parser
 
 def compute_test_auc(model, test_loader, device_id):
     model.eval()
@@ -109,12 +83,30 @@ def aggregate_all_predictions(predictions, labels,device_id):
     # Convert to numpy for AUC calculation
     return all_preds.cpu().numpy(), all_labels.cpu().numpy()
 
-def setup_ddp(args,worker_init_fn):
+def worker_init_fn(worker_id: int, num_workers: int, rank: int, seed: int) -> None:
+    """Initialize worker processes with a random seed.
+
+    Parameters
+    ----------
+    worker_id : int
+        ID of the worker process.
+    num_workers : int
+        Total number of workers that will be initialized.
+    rank : int
+        The rank of the current process.
+    seed : int
+        A random seed used determine the worker seed.
+    """
+    worker_seed = num_workers * rank + worker_id + seed
+    torch.manual_seed(worker_seed)
+    random.seed(worker_seed)
+
+def setup_ddp(sa_config,worker_init_fn):
     init_fn = partial(
         worker_init_fn,
-        num_workers=args.num_workers,
+        num_workers=sa_config['num_workers'],
         rank=dist.get_rank(),
-        seed=args.rseed,
+        seed=sa_config['rseed'],
     )
     torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
     torch.cuda.empty_cache()
@@ -138,44 +130,40 @@ def test_protonet(model, test_dataset, n_way=5, k_shot=5, q_query=15, num_episod
     print(f"Test Accuracy: {avg_accuracy:.4f}")
     return avg_accuracy
 
-def train_prototype(args, train_ds,test_ds):
-    
+def train_prototype(sa_config, train_ds,test_ds):
     f1_list,auc_list,precision_list,recall_list= [] , [] , [] , []
     setup()
-    device_id = setup_ddp(args,worker_init_fn)
+    device_id = setup_ddp(sa_config,worker_init_fn)
     test_sampler = DistributedSampler(test_ds, shuffle=True)  
     splits=KFold(n_splits=5,shuffle=True,random_state=42)
     for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(train_ds)))):
-        if dist.get_rank() == 0
+        if dist.get_rank() == 0:
             print("fold:", fold)
             print('Fold {}'.format(fold + 1))
         train_subset = Subset(train_ds, train_idx)
         val_subset = Subset(train_ds, val_idx)
         train_sampler = DistributedSampler(train_subset, shuffle=True)  
         valid_sampler = DistributedSampler(val_subset, shuffle=True)
-        classes_per_it_tr = args.classes_per_it_tr
-        num_samples_tr = args.num_support_tr + args.num_query_tr
-        classes_per_it_val = args.classes_per_it_val
-        num_samples_val = args.num_support_val + args.num_query_val
         classes = train_ds.tupple[1]
         model2 = ProtoNet()
         model2 = model2.cuda(device_id)
         model2 = DDP(model2, device_ids=[device_id])
-        optimizer = optim.AdamW(model2.parameters(), lr=args.lr,weight_decay=args.weight_decay)
-        try:
-            model2, optimizer, start_epoch, _ = load_checkpoint(model2, optimizer,"output_weight/proto_mnist.pth")
+        optimizer = optim.AdamW(model2.parameters(), lr=float(sa_config['lr']),weight_decay=float(sa_config['weight_decay']))
+        if sa_config['initialize_with_checkpoint']:
+            print("Loading checkpoint")
+            model2, optimizer, start_epoch, _ = load_checkpoint(model2, optimizer,sa_config['checkpoint_path'])
             print(f"Resuming from epoch {start_epoch + 1}")
-        except FileNotFoundError:
-            print("No checkpoint found, starting frsom scratch")
+        else:
+            print("starting from scratch")
             start_epoch=0
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.995, step_size=1)
         optimizer.zero_grad()
-        for epoch in range(start_epoch, args.num_epochs):
+        for epoch in range(start_epoch, sa_config['num_epochs']):
             model2.train()
-            n_way = 5
-            k_shot = 5 
-            q_query = 5
-            num_episodes = 100
+            n_way = sa_config['n_way']
+            k_shot = sa_config['k_shot']
+            q_query = sa_config['q_query']
+            num_episodes = sa_config['num_episodes']    
             accuracy_epoch = 0
             total_loss = 0
             for i in range(num_episodes):
@@ -196,14 +184,17 @@ def train_prototype(args, train_ds,test_ds):
                 optimizer.step()
             avg_loss = total_loss/num_episodes
             print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}, Train Accuracy: {accuracy_epoch/num_episodes:.4f}")
-            save_checkpoint(model2, optimizer, epoch, loss.detach(), file_path=f"output_weight/proto_mnist.pth")          
+            save_checkpoint(model2, optimizer, epoch, loss.detach(), file_path=sa_config['checkpoint_path'])          
         test_protonet(model2, test_ds)    
     return f1_list,auc_list, precision_list, recall_list
 
 if __name__ == '__main__':
-    args = make_parser().parse_args()
+    #Get Proto model config
+    yaml_file = os.path.join(os.path.dirname(__file__), 'proto.yaml')
+    with open(yaml_file, 'r') as f:
+        sa_config = yaml.safe_load(f)
     auc_list , precision_list, recall_list, f1_list = [], [], [], []
-    set_random_seed(args.rseed)
-    image_path = "/datasets/MNIST/processed"
+    set_random_seed(sa_config['rseed'])
+    image_path = sa_config['image_path']
     train_ds, test_ds = load_mnist_data(image_path)
-    f1_list,auc_list, precision_list, recall_list = train_prototype(args, train_ds,test_ds)   
+    f1_list,auc_list, precision_list, recall_list = train_prototype(sa_config, train_ds,test_ds)   

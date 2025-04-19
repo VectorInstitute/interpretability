@@ -1,5 +1,7 @@
 import random
 from torch.utils.data import Dataset
+import os
+import torch
 
 class MNistDataset(Dataset):
 
@@ -34,7 +36,7 @@ def create_episode(dataset, n_way, k_shot, q_query):
         query_set.extend([(dataset[idx][0].unsqueeze(0), i) for idx in selected_indices[k_shot:]])    
     return support_set, query_set
 
-def load_mnist_data(image_path)
+def load_mnist_data(image_path):
     file_path_train = os.path.join(image_path,"training.pt")
     x_train =torch.load(file_path_train)
     file_path_test = os.path.join(image_path,"test.pt")

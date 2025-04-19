@@ -1,3 +1,4 @@
+import torch 
 
 def save_checkpoint(model, optimizer, epoch, loss,file_path):
     checkpoint = {
@@ -7,7 +8,6 @@ def save_checkpoint(model, optimizer, epoch, loss,file_path):
         'loss': loss,
     }
     torch.save(checkpoint, file_path)
-
 
 def load_checkpoint(model, optimizer,file_path):
     checkpoint = torch.load(file_path)

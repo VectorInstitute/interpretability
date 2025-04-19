@@ -1,0 +1,19 @@
+image_path: "/datasets/MNIST/processed"
+checkpoint_path: "proto_mnist_checkpoint/proto.pth"   # replace with your path
+initialize_with_checkpoint: False
+num_workers: 4
+num_epochs: 40
+rseed: 42
+n_way: 5
+k_shot: 5 
+q_query: 5
+num_episodes: 100
+batch_size: 64
+lr: 1e-4 
+rseed': 42
+weight_decay: 1e-5
+n_way: 5
+k_shot: 5 
+q_query: 5
+num_episodes: 100
+
