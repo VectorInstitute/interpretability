@@ -73,7 +73,7 @@ source /ssd003/projects/aieng/public/interp_bootcamp/venv/bin/activate
 ## Running the code
 
 Please follow the steps in [instructions.md](instructions.md) to run the examples in this repository.
-Please follow steps in [scripts.md](scripts.md]) to run slurm scripts.
+Please follow steps in [scripts.md](scripts/scripts.mdscripts.md]) to run slurm scripts.
 
 ## License
 This project is licensed under the terms of the [LICENSE.md](LICENSE.md) file located in the root directory of this repository.
