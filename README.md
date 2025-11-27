@@ -1,10 +1,10 @@
 # Interpretable and Explainable AI Bootcamp
 
-This is the official repository for the 2025 Bootcamp on Interpretable and Explainable AI by Vector Institute. All reference implementations are present in `reference_implementations` folder. Small datasets are present in the corresponding subfolders, and the large datasets are present on the cluster at `/ssd003/projects/aieng/public/interp_bootcamp/datasets`.
+This is the official repository for the 2025 Bootcamp on Interpretable and Explainable AI by Vector Institute. All reference implementations are present in `implementations` folder. Small datasets are present in the corresponding subfolders, and the large datasets are present on the cluster at `/ssd003/projects/aieng/public/interp_bootcamp/datasets`.
 
 ## Repository Structure
 
-- [reference_implementations](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/reference_implementations) folder contains all the code covered in this bootcamp, and is organized by topic. Each topic has its own directory containing python scripts, notebooks, datasets and a README for guidance.
+- [implementations](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/implementations) folder contains all the code covered in this bootcamp, and is organized by topic. Each topic has its own directory containing python scripts, notebooks, datasets and a README for guidance.
 - [scripts](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/scripts) contains utility scripts for submiting training jobs.
 - [pyproject.toml](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/pyproject.toml) file configures various build system requirements and dependencies, centralizing project settings in a standardized format.
 - [requirements.txt](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/requirements.txt) file contains a list of packages and their versions required to run the implementations. This can be used to setup your own environment in the cluster/your machine.
@@ -12,11 +12,11 @@ This is the official repository for the 2025 Bootcamp on Interpretable and Expla
 
 ## Bootcamp Content
 
-Each topic within the bootcamp has a dedicated directory in the `reference_implementations/` folder. In each directory, there is a `README.md` file that provides an overview of the topic, prerequisites, and notebook descriptions. 
+Each topic within the bootcamp has a dedicated directory in the `implementations/` folder. In each directory, there is a `README.md` file that provides an overview of the topic, prerequisites, and notebook descriptions. 
 
 Here is the list of topics covered in this bootcamp:
 
-- Post-hoc Explainability Methods in [Post-hoc](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/reference_implementations/Post-hoc):
+- Post-hoc Explainability Methods in [Post-hoc](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/implementations/Post-hoc):
     - LIME
     - SHAP
     - PDP
@@ -24,7 +24,7 @@ Here is the list of topics covered in this bootcamp:
     - Integrated Gradients
     - Counterfactual Explanations
     
-- Interpretable models in [Interpretable-models](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/reference_implementations/Intepretable-models):
+- Interpretable models in [Interpretable-models](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/implementations/Intepretable-models):
     - GAM
     - NAM
     - EBM
