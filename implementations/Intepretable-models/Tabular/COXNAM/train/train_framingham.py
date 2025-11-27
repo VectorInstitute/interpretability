@@ -256,7 +256,7 @@ def main():
     )
     plot_survival_curve(survival_probs_test, time_grid)  # noqa: F405
 
-    plot_shape_functions_and_distributions(
+    plot_shape_functions_and_distributions(  # noqa: F405
         coxnam_model, X_train.to_numpy(), feature_names
     )
 

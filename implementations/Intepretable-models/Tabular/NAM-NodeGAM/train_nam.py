@@ -12,8 +12,13 @@ from torch.utils.data import DataLoader, TensorDataset
 nam = ultraimport.create_ns_package("nam", "__dir__/nam")
 
 from nam.model import NeuralAdditiveModel, ExULayer, ReLULayer  # noqa: E402
-from nam.data_utils import *  # noqa: E402, F403
-from nam.utils import *  # noqa: E402, F403
+from nam.data_utils import split_dataset, process_us_130_csv  # noqa: E402
+from nam.utils import (  # noqa: E402
+    get_device,
+    random_seed,
+    calculate_n_units,
+    get_full_data,
+)
 
 # Some parts were extracted from: https://github.com/kherud/neural-additive-models-pt/tree/master
 
@@ -30,12 +35,12 @@ def get_data_loaders(X: torch.tensor, y: torch.tensor, batch: int) -> Tuple[Data
         test_dl: DataLoader for testing data.
         val_dl: DataLoader for validation data.
     """
-    train_test_split = split_dataset(X, y, n_splits=1, stratified=True)  # noqa: F405
+    train_test_split = split_dataset(X, y, n_splits=1, stratified=True)
 
     (x_train, y_train), (x_test, y_test) = next(train_test_split)
 
     # Get train val split
-    train_val_split = split_dataset(x_train, y_train, n_splits=1, stratified=True)  # noqa: F405
+    train_val_split = split_dataset(x_train, y_train, n_splits=1, stratified=True)
 
     (x_train, y_train), (x_val, y_val) = next(train_val_split)
 
@@ -161,7 +166,7 @@ def main():
 
     data_file = os.path.join(config["data_dir"], config["data_file"])
     data = pd.read_csv(data_file)
-    df = process_us_130_csv(data)  # noqa: F405
+    df = process_us_130_csv(data)
 
     # Separate training data and labels
     X, y = df.drop("readmitted_binarized", axis=1), df["readmitted_binarized"]
@@ -180,12 +185,12 @@ def main():
     print("------------------------------")
 
     # Setup
-    device = get_device()  # noqa: F405
+    device = get_device()
     print(f"Using device: {device}")
-    random_seed(42, True)  # noqa: F405
+    random_seed(42, True)
 
-    shallow_units = calculate_n_units(  # noqa: F405
-        get_full_data(train_dl),  # noqa: F405
+    shallow_units = calculate_n_units(
+        get_full_data(train_dl),
         config["nam"]["n_basis_functions"],
         config["nam"]["units_multiplier"],
     )
