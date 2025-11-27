@@ -25,7 +25,7 @@ srun --pty --mem=100GB -c 20 --gres=gpu:4 --qos=normal -t 8:00:00 /bin/bash
 
 ## Dataset
 - [NIH Dataset](https://www.kaggle.com/datasets/nih-chest-xrays/data/data)
-    -  This dataset is present on the cluster at the following path `/ssd003/projects/aieng/public/interp_bootcamp/datasets/NIH`. 
+    -  This dataset is present on the cluster at the following path `/ssd003/projects/aieng/public/interp_bootcamp/datasets/NIH`.
     - If you are running scripts on your laptop, you need to download the dataset from the link above.
 
 

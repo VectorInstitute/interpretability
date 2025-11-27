@@ -17,6 +17,3 @@ This repository contains code and images demonstrating the use of Explainable Bo
 
 - [InterpretML Documentation](https://interpret.ml/docs/ebm.html): Official documentation for Explainable Boosting Machine.
 - [EBM Paper](https://arxiv.org/abs/1909.09223): Research paper on Explainable Boosting Machine.
-
-
-

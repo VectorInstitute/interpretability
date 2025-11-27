@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 # Self-Attention block
 class SelfAttention(nn.Module):
     def __init__(self, in_dim):
@@ -22,17 +23,24 @@ class SelfAttention(nn.Module):
         # calculating weighted context
         out = torch.bmm(value, attention.permute(0, 2, 1))
         out = out.view(batch_size, C, width, height)
-        out = self.gamma * out + x # weighted context added to the original input in a residual manner
+        out = (
+            self.gamma * out + x
+        )  # weighted context added to the original input in a residual manner
         return out, attention
+
 
 # ResNet with Self-Attention
 class ResNetAttention(nn.Module):
-    def __init__(self, original_model,num_classes=15):
+    def __init__(self, original_model, num_classes=15):
         super(ResNetAttention, self).__init__()
         self.features = nn.Sequential(*list(original_model.children())[:-2])
-        self.attention = SelfAttention(in_dim=512)  # Adjust channels based on ResNet block
+        self.attention = SelfAttention(
+            in_dim=512
+        )  # Adjust channels based on ResNet block
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc1 = nn.Linear(512, 256)  # Output channels should match in_channels of attention layer
+        self.fc1 = nn.Linear(
+            512, 256
+        )  # Output channels should match in_channels of attention layer
         self.fc2 = nn.Linear(256, num_classes)
 
     def forward(self, x):

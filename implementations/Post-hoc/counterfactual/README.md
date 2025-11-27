@@ -8,5 +8,5 @@ A Counterfactual explanation can be used to explain predictions of individual in
 ## Datasets
 - [Diabetic dataset](https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008)
 - [NIH Dataset](https://www.kaggle.com/datasets/nih-chest-xrays/data/data)
-    -  This dataset is present on the cluster at the following path `/ssd003/projects/aieng/public/interp_bootcamp/datasets/NIH`. 
+    -  This dataset is present on the cluster at the following path `/ssd003/projects/aieng/public/interp_bootcamp/datasets/NIH`.
     - If you are running scripts on your laptop, you need to download the dataset from the link above.

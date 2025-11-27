@@ -1,6 +1,5 @@
 import os
 import yaml
-from collections import Counter
 from typing import Union, List, Tuple, Dict
 
 import ultraimport
@@ -14,39 +13,44 @@ from imblearn.over_sampling import RandomOverSampler
 from interpret.glassbox import ExplainableBoostingClassifier
 from sklearn.metrics import f1_score, roc_auc_score, precision_score, recall_score
 
-nam = ultraimport.create_ns_package('nam', '__dir__/nam')
-from nam.data_utils import *
+nam = ultraimport.create_ns_package("nam", "__dir__/nam")
+from nam.data_utils import *  # noqa: E402, F403
 
-def plot_features(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
-                  fold: int,
-                  feature_names: List) -> None:
-    """ Plot feature importance
+
+def plot_features(
+    model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
+    fold: int,
+    feature_names: List,
+) -> None:
+    """Plot feature importance
     Parameters:
         - model: Model to get feature importance from.
         - fold: Fold number.
         - feature_names: Names of features.
-    
+
         Returns:
         - None
     """
     if isinstance(model, xgb.XGBClassifier):
         importances = model.feature_importances_
-        model_type = 'xgb'
+        model_type = "xgb"
         plt.figure(figsize=(20, 15))
-        plt.barh(range(len(feature_names)), importances, align='center')
+        plt.barh(range(len(feature_names)), importances, align="center")
         plt.yticks(range(len(feature_names)), feature_names)
-        plt.xlabel(f'Feature Importance for Fold {fold}')
-        plt.title('Feature Importance plot')
-        plt.savefig(f'feature_importance_{model_type}_{fold}.png')
+        plt.xlabel(f"Feature Importance for Fold {fold}")
+        plt.title("Feature Importance plot")
+        plt.savefig(f"feature_importance_{model_type}_{fold}.png")
     else:
         importances = model.explain_global()
-        model_type = 'ebm'
+        model_type = "ebm"
         ebm_plot = importances.visualize()
         ebm_plot.write_image(f"feature_importance_{model_type}_{fold}.png")
 
-def get_classifier(explainable: bool = False
-                    ) -> Union[xgb.XGBClassifier, ExplainableBoostingClassifier]:
-    """ Get classifier to fit a model
+
+def get_classifier(
+    explainable: bool = False,
+) -> Union[xgb.XGBClassifier, ExplainableBoostingClassifier]:
+    """Get classifier to fit a model
     Parameters:
         - explainable: Whether to use ExplainableBoostingClassifier.
 
@@ -55,28 +59,30 @@ def get_classifier(explainable: bool = False
     """
     if explainable:
         ebm = ExplainableBoostingClassifier(
-                            learning_rate=0.01,
-                            max_bins=128,
-                            max_interaction_bins=64,
-                            min_samples_leaf=5,
-                            early_stopping_rounds=10)
+            learning_rate=0.01,
+            max_bins=128,
+            max_interaction_bins=64,
+            min_samples_leaf=5,
+            early_stopping_rounds=10,
+        )
     else:
-        ebm = xgb.XGBClassifier(n_estimators=300,
-                                max_depth=6,
-                                learning_rate=0.01,
-                                gamma=0.01,
-                                alpha=0.1)
+        ebm = xgb.XGBClassifier(
+            n_estimators=300, max_depth=6, learning_rate=0.01, gamma=0.01, alpha=0.1
+        )
     return ebm
 
-def get_predictions(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
-                    X_train: pd.DataFrame,
-                    X_test: pd.DataFrame) -> Tuple:
-    """ Get predictions from model
+
+def get_predictions(
+    model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+) -> Tuple:
+    """Get predictions from model
     Parameters:
         - model: Model to get predictions from.
         - X_train: Training data.
         - X_test: Testing data.
-    
+
     Returns:
         - y_te_prob: Predicted probabilities for test data.
         - y_te_pred: Predicted labels for test data.
@@ -84,15 +90,15 @@ def get_predictions(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifie
         - y_tr_prob: Predicted probabilities for training data.
     """
     y_te_pred = model.predict(X_test)
-    y_te_prob = model.predict_proba(X_test)[:,1]
+    y_te_prob = model.predict_proba(X_test)[:, 1]
     y_tr_pred = model.predict(X_train)
-    y_tr_prob = model.predict_proba(X_train)[:,1]
+    y_tr_prob = model.predict_proba(X_train)[:, 1]
 
     return y_te_prob, y_te_pred, y_tr_pred, y_tr_prob
 
-def get_top_features(X_train: pd.DataFrame,
-                     y_train: pd.DataFrame)-> List:
-    """ Get top features using Lasso
+
+def get_top_features(X_train: pd.DataFrame, y_train: pd.DataFrame) -> List:
+    """Get top features using Lasso
     Parameters:
         - X_train: Training data.
         - y_train: Training labels.
@@ -106,18 +112,20 @@ def get_top_features(X_train: pd.DataFrame,
     X_train, y_train = smote.fit_resample(X_train, y_train)
     lasso.fit(X_train, y_train)
 
-    # Select columns with non-zero lasso coefficients 
+    # Select columns with non-zero lasso coefficients
     selected_feats = np.where(lasso.coef_ != 0)[0]
     top_feats = [X_train.columns[i] for i in selected_feats]
 
     return top_feats
 
-def train_and_predict(model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
-                      X: pd.DataFrame,
-                      y: pd.DataFrame,
-                      visualize: bool = False) -> Dict:
-    
-    """ Train and predict using NAM model.
+
+def train_and_predict(
+    model: Union[xgb.XGBClassifier, ExplainableBoostingClassifier],
+    X: pd.DataFrame,
+    y: pd.DataFrame,
+    visualize: bool = False,
+) -> Dict:
+    """Train and predict using NAM model.
     Parameters:
         - model: Model to train and predict.
         - X: Data.
@@ -129,95 +137,115 @@ def train_and_predict(model: Union[xgb.XGBClassifier, ExplainableBoostingClassif
     """
     auc, f1, precision, recall = [], [], [], []
 
-    #Run model for 5 fold split
-    kf=KFold(n_splits=5, shuffle=True)
+    # Run model for 5 fold split
+    kf = KFold(n_splits=5, shuffle=True)
     for i, (train_idx, test_idx) in enumerate(kf.split(X)):
         print(f"\n~~~ Fold: {i+1} ~~~~")
-        
+
         X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
         X_test, y_test = X.iloc[test_idx], y.iloc[test_idx]
 
-        #Get top features
+        # Get top features
         top_feats = get_top_features(X_train, y_train)
 
-        #Extract data with top feature columns
+        # Extract data with top feature columns
         X_train_selected, X_test_selected = X_train[top_feats], X_test[top_feats]
 
-        #Fit model
+        # Fit model
         model.fit(X_train_selected, y_train)
 
-        #Save plots
+        # Save plots
         if visualize:
-            plot_features(model, i+1, X_train_selected.columns)
+            plot_features(model, i + 1, X_train_selected.columns)
 
-        #Calculate train and test predictions
-        y_te_prob, y_te_pred, y_tr_pred, y_tr_prob = get_predictions(model,
-                                                        X_train_selected,
-                                                        X_test_selected)
-        #Calculate train AUC score
+        # Calculate train and test predictions
+        y_te_prob, y_te_pred, y_tr_pred, y_tr_prob = get_predictions(
+            model, X_train_selected, X_test_selected
+        )
+        # Calculate train AUC score
         train_auc = roc_auc_score(y_train, y_tr_pred)
 
         print(f"\nTrain AUC score for fold {i+1}: ", train_auc)
 
-        #Calculate test data scores
+        # Calculate test data scores
         auc.append(roc_auc_score(y_test, y_te_prob))
         f1.append(f1_score(y_test, y_te_pred))
         precision.append(recall_score(y_test, y_te_pred))
         recall.append(precision_score(y_test, y_te_pred))
-       
-        print(f"\nTest scores for Fold {i+1}: \nF1: {f1[i]} \nAUC: {auc[i]}, \
-              \nPrecision: {precision[i]} \nRecall: {recall[i]}")
-               
-    return {'f1': (np.mean(f1), np.std(f1)),
-            'auc': (np.mean(auc), np.std(auc)),
-            'precision': (np.mean(precision),np.std(precision)),
-            'recall': (np.mean(recall),np.std(recall))}
 
-if __name__ == '__main__':
+        print(
+            f"\nTest scores for Fold {i+1}: \nF1: {f1[i]} \nAUC: {auc[i]}, \
+              \nPrecision: {precision[i]} \nRecall: {recall[i]}"
+        )
 
-    #Get nam model config
-    yaml_file = os.path.join(os.path.dirname(__file__), 'nam.yaml')
-    with open(yaml_file, 'r') as f:
+    return {
+        "f1": (np.mean(f1), np.std(f1)),
+        "auc": (np.mean(auc), np.std(auc)),
+        "precision": (np.mean(precision), np.std(precision)),
+        "recall": (np.mean(recall), np.std(recall)),
+    }
+
+
+if __name__ == "__main__":
+    # Get nam model config
+    yaml_file = os.path.join(os.path.dirname(__file__), "nam.yaml")
+    with open(yaml_file, "r") as f:
         config = yaml.safe_load(f)
 
-    #Read data
-    data_file = os.path.join(config['data_dir'], config['data_file'])
+    # Read data
+    data_file = os.path.join(config["data_dir"], config["data_file"])
     data = pd.read_csv(data_file)
-    df = process_us_130_csv(data)
-    
-    #Separate training data and labels
-    X, y = df.drop('readmitted_binarized', axis=1) , df['readmitted_binarized']
-    
-    #Get results from XGB model
+    df = process_us_130_csv(data)  # noqa: F405
+
+    # Separate training data and labels
+    X, y = df.drop("readmitted_binarized", axis=1), df["readmitted_binarized"]
+
+    # Get results from XGB model
     print("\n---------------------")
     print("Fitting XGB model..")
     print("---------------------")
     ebm = get_classifier()
     ebm_scores = train_and_predict(ebm, X, y, visualize=True)
 
-    print(f"\nScores of XGB model:")
-    print(f"F1: Mean: {ebm_scores['f1'][0]} \t \
-          Std. Deviation: {ebm_scores['f1'][1]}")
-    print(f"AUC: Mean: {ebm_scores['auc'][0]} \t \
-          Std. Deviation: {ebm_scores['auc'][1]}")
-    print(f"Precision: Mean: {ebm_scores['precision'][0]} \t \
-          Std. Deviation: {ebm_scores['precision'][1]}")
-    print(f"Recall: Mean: {ebm_scores['recall'][0]} \t \
-          Std. Deviation: {ebm_scores['recall'][1]}")
+    print("\nScores of XGB model:")
+    print(
+        f"F1: Mean: {ebm_scores['f1'][0]} \t \
+          Std. Deviation: {ebm_scores['f1'][1]}"
+    )
+    print(
+        f"AUC: Mean: {ebm_scores['auc'][0]} \t \
+          Std. Deviation: {ebm_scores['auc'][1]}"
+    )
+    print(
+        f"Precision: Mean: {ebm_scores['precision'][0]} \t \
+          Std. Deviation: {ebm_scores['precision'][1]}"
+    )
+    print(
+        f"Recall: Mean: {ebm_scores['recall'][0]} \t \
+          Std. Deviation: {ebm_scores['recall'][1]}"
+    )
 
-    #Get results from EBM model
+    # Get results from EBM model
     print("\n---------------------")
     print("Fitting EBM model..")
     print("---------------------")
     ebm_explain = get_classifier(explainable=True)
     ebm_explain_scores = train_and_predict(ebm_explain, X, y, visualize=True)
 
-    print(f"\nScores of Explaining Boosting Classifier:")
-    print(f"F1: Mean: {ebm_explain_scores['f1'][0]} \t  \
-          Std. Deviation: {ebm_explain_scores['f1'][1]}")
-    print(f"AUC: Mean: {ebm_explain_scores['auc'][0]} \t \
-          Std. Deviation: {ebm_explain_scores['auc'][1]}")
-    print(f"Precision: Mean: {ebm_explain_scores['precision'][0]} \t \
-          Std. Deviation: {ebm_explain_scores['precision'][1]}")
-    print(f"Recall: Mean: {ebm_explain_scores['recall'][0]} \t \
-          Std. Deviation: {ebm_explain_scores['recall'][1]}")
+    print("\nScores of Explaining Boosting Classifier:")
+    print(
+        f"F1: Mean: {ebm_explain_scores['f1'][0]} \t  \
+          Std. Deviation: {ebm_explain_scores['f1'][1]}"
+    )
+    print(
+        f"AUC: Mean: {ebm_explain_scores['auc'][0]} \t \
+          Std. Deviation: {ebm_explain_scores['auc'][1]}"
+    )
+    print(
+        f"Precision: Mean: {ebm_explain_scores['precision'][0]} \t \
+          Std. Deviation: {ebm_explain_scores['precision'][1]}"
+    )
+    print(
+        f"Recall: Mean: {ebm_explain_scores['recall'][0]} \t \
+          Std. Deviation: {ebm_explain_scores['recall'][1]}"
+    )

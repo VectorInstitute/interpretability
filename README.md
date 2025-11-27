@@ -12,7 +12,7 @@ This is the official repository for the 2025 Bootcamp on Interpretable and Expla
 
 ## Bootcamp Content
 
-Each topic within the bootcamp has a dedicated directory in the `implementations/` folder. In each directory, there is a `README.md` file that provides an overview of the topic, prerequisites, and notebook descriptions. 
+Each topic within the bootcamp has a dedicated directory in the `implementations/` folder. In each directory, there is a `README.md` file that provides an overview of the topic, prerequisites, and notebook descriptions.
 
 Here is the list of topics covered in this bootcamp:
 
@@ -23,7 +23,7 @@ Here is the list of topics covered in this bootcamp:
     - ALE
     - Integrated Gradients
     - Counterfactual Explanations
-    
+
 - Interpretable models in [Interpretable-models](https://github.com/VectorInstitute/interpretability-bootcamp/tree/main/implementations/Intepretable-models):
     - GAM
     - NAM
@@ -43,7 +43,7 @@ Please check the following requirements before running the code examples on your
 ### Prerequisites
 
 1. A Github account with security credentials setup to clone the repository.
-2. Access to the Vector Institute's cluster: You will be able to login via `ssh username@v.vectorinstitute.ai` and 2FA via mobile authentication. 
+2. Access to the Vector Institute's cluster: You will be able to login via `ssh username@v.vectorinstitute.ai` and 2FA via mobile authentication.
 3. VPN setup via Fortinet client: After connecting via VPN, you will be able to login to the Jupyter Hub server hosted at https://vdm1.cluster.local:8000/.
 
 ### Python Version
@@ -54,18 +54,18 @@ Check this if you are running the code on your laptop.
 
 ### Resources
 
-1. As a part of your cluster account, you have been allocated a scratch folder where code, checkpoints and training artifacts can be stored. It is at the location 
+1. As a part of your cluster account, you have been allocated a scratch folder where code, checkpoints and training artifacts can be stored. It is at the location
 ```bash
 /scratch/ssd004/scratch/<username>
 ```
-It can also be a different path with `ssd003`. 
+It can also be a different path with `ssd003`.
 
 2. A virtual environment is present at a shard location on the cluster. Please source it using the following command:
 ```bash
 source /ssd003/projects/aieng/public/interp_bootcamp/venv/bin/activate
 ```
-3. Large datasets used within the repository are present at the location `/ssd003/projects/aieng/public/interp_bootcamp/datasets`. 
-4. Pretrained models are available at the location `/ssd003/projects/aieng/public/interp_bootcamp/checkpoints`. 
+3. Large datasets used within the repository are present at the location `/ssd003/projects/aieng/public/interp_bootcamp/datasets`.
+4. Pretrained models are available at the location `/ssd003/projects/aieng/public/interp_bootcamp/checkpoints`.
 
 >[!NOTE]
 >- If you face any issues with the pre-requisites or are unable to access any of the cluster resources, please contact your facilitator.
@@ -79,7 +79,7 @@ Please follow steps in [scripts.md](scripts/scripts.md) to run slurm scripts.
 This project is licensed under the terms of the [LICENSE.md](LICENSE.md) file located in the root directory of this repository.
 
 ## Contribution
-To get started with contributing to our project, please read our [CONTRIBUTING.md](CONTRIBUTING.md) guide. 
+To get started with contributing to our project, please read our [CONTRIBUTING.md](CONTRIBUTING.md) guide.
 
 ## Contact Information
 

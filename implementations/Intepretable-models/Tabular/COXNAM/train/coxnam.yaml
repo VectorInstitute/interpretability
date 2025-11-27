@@ -10,7 +10,6 @@ train_params:
   #hidden_units: [64, 32, 16]
   #num_epochs: 30
   num_epochs: 150 #framingham
-  num_epochs: 50 #framingham_10year
   input_dim: 1 #framingham, train.py
   #batch_size: 256
   batch_size: 128 #framingham

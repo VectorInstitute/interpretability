@@ -21,29 +21,32 @@ import math
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from pygam import LinearGAM, s, f
-import joblib
 
 np.random.seed(42)
+
 
 # -----------------------------
 # 1. Load and Preprocess Data
 # -----------------------------
 def load_data():
     # Adjust the path as needed
-    return pd.read_csv('../datasets/insurance/insurance.csv')
+    return pd.read_csv("../datasets/insurance/insurance.csv")
+
 
 def preprocess_data(data):
     # Make copies to preserve original numerical values
     data_processed = data.copy()
     data_numerical_orig = data_processed.copy()
-    
+
     # Identify categorical and numerical columns.
-    categorical_columns = data.select_dtypes(include=['object']).columns.tolist()
-    numerical_columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    categorical_columns = data.select_dtypes(include=["object"]).columns.tolist()
+    numerical_columns = data.select_dtypes(
+        include=["int64", "float64"]
+    ).columns.tolist()
     # Remove the target variable 'charges' from numerical_columns if present.
-    if 'charges' in numerical_columns:
-        numerical_columns.remove('charges')
-    
+    if "charges" in numerical_columns:
+        numerical_columns.remove("charges")
+
     # For categorical features, use LabelEncoder and store mapping.
     cat_mapping = {}
     for col in categorical_columns:
@@ -51,19 +54,28 @@ def preprocess_data(data):
         data_processed[col] = le.fit_transform(data_processed[col])
         # Save the original class labels (in order of encoding)
         cat_mapping[col] = list(le.classes_)
-    
+
     # For numerical features, store original values.
     data_numerical_orig = data_numerical_orig[numerical_columns]
-    
+
     # Scale numerical features
     scaler = StandardScaler()
-    data_processed[numerical_columns] = scaler.fit_transform(data_processed[numerical_columns])
-    
+    data_processed[numerical_columns] = scaler.fit_transform(
+        data_processed[numerical_columns]
+    )
+
     return data_processed, scaler, cat_mapping, data_numerical_orig, numerical_columns
+
 
 # Load and preprocess the data
 df = load_data()
-df_processed, scaler, cat_mapping, data_numerical_orig, numerical_columns = preprocess_data(df)
+(
+    df_processed,
+    scaler,
+    cat_mapping,
+    data_numerical_orig,
+    numerical_columns,
+) = preprocess_data(df)
 print("Processed data head:")
 print(df_processed.head())
 
@@ -71,10 +83,12 @@ print(df_processed.head())
 # 2. Split Data for Training
 # -----------------------------
 # Assume target is 'charges'
-X = df_processed.drop('charges', axis=1)
-y = df_processed['charges']
+X = df_processed.drop("charges", axis=1)
+y = df_processed["charges"]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 # -----------------------------
 # 3. Build the GAM Model
@@ -95,7 +109,7 @@ print(gam.summary())
 # 4. Evaluate the Model
 # -----------------------------
 y_pred = gam.predict(X_test)
-mse = np.mean((y_test - y_pred)**2)
+mse = np.mean((y_test - y_pred) ** 2)
 mae = np.mean(np.abs(y_test - y_pred))
 rmse = np.sqrt(mse)
 print(f"Mean Squared Error: {mse:.4f}")
@@ -123,14 +137,14 @@ baseline_row = X_train.values.mean(axis=0)
 ncols = math.ceil(np.sqrt(n_features))
 nrows = math.ceil(n_features / ncols)
 
-fig, axs = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
+fig, axs = plt.subplots(nrows, ncols, figsize=(5 * ncols, 4 * nrows))
 axs = axs.ravel()
 
 # For each feature, create a full X matrix based on baseline values.
 for idx in range(n_features):
     feature = feature_names[idx]
     term_idx = int(idx)
-    
+
     if feature in numerical_columns:
         grid_points = 100
         # Create baseline matrix with grid_points rows.
@@ -145,7 +159,7 @@ for idx in range(n_features):
         X_baseline[:, term_idx] = grid_scaled
         pdep, confi = gam.partial_dependence(term=term_idx, X=X_baseline, width=0.95)
         axs[idx].plot(grid_orig, pdep)
-        axs[idx].fill_between(grid_orig, confi[:, 0], confi[:, 1], color='r', alpha=0.3)
+        axs[idx].fill_between(grid_orig, confi[:, 0], confi[:, 1], color="r", alpha=0.3)
         axs[idx].set_xlabel(feature)
     else:
         # For categorical features
@@ -155,12 +169,14 @@ for idx in range(n_features):
         grid_factor = np.arange(grid_points)
         X_baseline[:, term_idx] = grid_factor
         pdep, confi = gam.partial_dependence(term=term_idx, X=X_baseline, width=0.95)
-        axs[idx].plot(grid_factor, pdep, marker='o')
-        axs[idx].fill_between(grid_factor, confi[:, 0], confi[:, 1], color='r', alpha=0.3)
+        axs[idx].plot(grid_factor, pdep, marker="o")
+        axs[idx].fill_between(
+            grid_factor, confi[:, 0], confi[:, 1], color="r", alpha=0.3
+        )
         axs[idx].set_xticks(grid_factor)
         axs[idx].set_xticklabels(levels)
         axs[idx].set_xlabel(feature)
-    
+
     axs[idx].set_ylabel("Target")
     axs[idx].set_title(f"Shape Function of {feature}")
 
@@ -169,4 +185,4 @@ for k in range(n_features, len(axs)):
     fig.delaxes(axs[k])
 
 plt.tight_layout()
-plt.savefig('GAM_regression.png')
+plt.savefig("GAM_regression.png")

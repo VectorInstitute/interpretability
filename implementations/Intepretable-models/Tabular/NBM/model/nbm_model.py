@@ -4,12 +4,12 @@ available at https://github.com/facebookresearch/nbm-spam
 
 """
 
-
 import math
 from collections import OrderedDict
 from itertools import combinations
 import torch
 import torch.nn as nn
+
 
 # -----------------------------------------------
 # Basic building block: MLP to learn n-ary bases.
@@ -18,6 +18,7 @@ class ConceptNNBasesNary(nn.Module):
     """
     Neural Network module to learn basis functions from n-ary feature interactions.
     """
+
     def __init__(self, order, num_bases, hidden_dims, dropout=0.0, batchnorm=False):
         """
         Args:
@@ -67,6 +68,7 @@ class ConceptNBMNary(nn.Module):
     Note: The "polynomial" mode (which uses a SPAM module) is not supported in this pure
     PyTorch implementation.
     """
+
     def __init__(
         self,
         num_concepts,
@@ -105,7 +107,9 @@ class ConceptNBMNary(nn.Module):
         self._output_penalty = output_penalty
 
         if polynomial is not None:
-            raise NotImplementedError("Polynomial mode is not supported in this pure PyTorch implementation.")
+            raise NotImplementedError(
+                "Polynomial mode is not supported in this pure PyTorch implementation."
+            )
 
         # Generate n-ary combinations
         if nary is None:
@@ -179,7 +183,9 @@ class ConceptNBMNary(nn.Module):
         # Concatenate outputs from all orders and subnets.
         bases = torch.cat(bases, dim=-2)
         # Apply featurization via a grouped convolution.
-        out_feats = self.featurizer(bases.reshape(input_order.shape[0], -1, 1)).squeeze(-1)
+        out_feats = self.featurizer(bases.reshape(input_order.shape[0], -1, 1)).squeeze(
+            -1
+        )
         out = self.classifier(out_feats)
         if self.training:
             return out, out_feats
@@ -194,8 +200,8 @@ class ConceptNBMNarySparse(nn.Module):
     """
     ConceptNBMNarySparse
     --------------------
-    A Sparse Neural Basis Model (NBM) that computes basis functions only for feature tuples 
-    not equal to a given ignore value. This model supports n-ary combinations of input concepts 
+    A Sparse Neural Basis Model (NBM) that computes basis functions only for feature tuples
+    not equal to a given ignore value. This model supports n-ary combinations of input concepts
     and allows for sparse computation by ignoring specific input values.
 
     Attributes:
@@ -212,7 +218,7 @@ class ConceptNBMNarySparse(nn.Module):
         classifier (nn.Linear): Linear layer for classification.
 
     Methods:
-        __init__(self, num_concepts, num_classes, nary=None, num_bases=100, hidden_dims=(256, 128, 128), 
+        __init__(self, num_concepts, num_classes, nary=None, num_bases=100, hidden_dims=(256, 128, 128),
                  dropout=0.0, bases_dropout=0.0, batchnorm=False, output_penalty=0.0, nary_ignore_input=0.0):
             Initializes the ConceptNBMNarySparse model.
 
@@ -228,7 +234,7 @@ class ConceptNBMNarySparse(nn.Module):
         reset_parameters(self):
             Resets the parameters of the model using Kaiming initialization.
 
-            This method initializes the weights and biases of the featurizer parameters 
+            This method initializes the weights and biases of the featurizer parameters
             for each n-ary order using Kaiming uniform initialization.
 
         forward(self, input):
@@ -240,6 +246,7 @@ class ConceptNBMNarySparse(nn.Module):
                 torch.Tensor: Output logits of shape (batch_size, num_classes).
                 torch.Tensor: (If training) Intermediate features of shape (batch_size, num_out_features).
     """
+
     def __init__(
         self,
         num_concepts,
@@ -295,38 +302,54 @@ class ConceptNBMNarySparse(nn.Module):
         else:
             raise TypeError("'nary_ignore_input' must be a float or dict.")
 
-        self.bases_nary_models = nn.ModuleDict({
-            order: ConceptNNBasesNary(
-                order=int(order),
-                num_bases=self._num_bases,
-                hidden_dims=hidden_dims,
-                dropout=dropout,
-                batchnorm=batchnorm,
-            )
-            for order in self._nary_indices.keys()
-        })
+        self.bases_nary_models = nn.ModuleDict(
+            {
+                order: ConceptNNBasesNary(
+                    order=int(order),
+                    num_bases=self._num_bases,
+                    hidden_dims=hidden_dims,
+                    dropout=dropout,
+                    batchnorm=batchnorm,
+                )
+                for order in self._nary_indices.keys()
+            }
+        )
 
         self.bases_dropout = nn.Dropout(p=bases_dropout)
 
-        self.featurizer_params = nn.ModuleDict({
-            order: nn.ParameterDict({
-                "weight": nn.Parameter(
-                    torch.empty((len(self._nary_indices[order]), self._num_bases))
-                ),
-                "bias": nn.Parameter(torch.empty(len(self._nary_indices[order])))
-            })
-            for order in self._nary_indices.keys()
-        })
+        self.featurizer_params = nn.ModuleDict(
+            {
+                order: nn.ParameterDict(
+                    {
+                        "weight": nn.Parameter(
+                            torch.empty(
+                                (len(self._nary_indices[order]), self._num_bases)
+                            )
+                        ),
+                        "bias": nn.Parameter(
+                            torch.empty(len(self._nary_indices[order]))
+                        ),
+                    }
+                )
+                for order in self._nary_indices.keys()
+            }
+        )
 
-        num_out_features = sum(len(self._nary_indices[order]) for order in self._nary_indices.keys())
-        self.classifier = nn.Linear(in_features=num_out_features, out_features=self._num_classes, bias=True)
+        num_out_features = sum(
+            len(self._nary_indices[order]) for order in self._nary_indices.keys()
+        )
+        self.classifier = nn.Linear(
+            in_features=num_out_features, out_features=self._num_classes, bias=True
+        )
 
         self.reset_parameters()
 
     def reset_parameters(self):
         # Use Kaiming initialization for the featurizer parameters.
         for order in self._nary_indices.keys():
-            nn.init.kaiming_uniform_(self.featurizer_params[order]["weight"], a=math.sqrt(5))
+            nn.init.kaiming_uniform_(
+                self.featurizer_params[order]["weight"], a=math.sqrt(5)
+            )
             if self.featurizer_params[order]["bias"] is not None:
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(
                     self.featurizer_params[order]["weight"]

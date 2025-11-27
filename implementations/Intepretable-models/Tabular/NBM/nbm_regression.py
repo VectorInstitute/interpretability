@@ -1,6 +1,5 @@
-
 """
-This script demonstrates the use of the ConceptNBMNary model for regression tasks using the California Housing dataset. 
+This script demonstrates the use of the ConceptNBMNary model for regression tasks using the California Housing dataset.
 It includes data preprocessing, model training, evaluation, and visualization of shape functions.
 
 """
@@ -45,7 +44,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Convert data to torch tensors
 X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
-y_train_tensor = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)  # shape: [N, 1]
+y_train_tensor = torch.tensor(y_train, dtype=torch.float32).unsqueeze(
+    1
+)  # shape: [N, 1]
 X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
 y_test_tensor = torch.tensor(y_test, dtype=torch.float32).unsqueeze(1)
 
@@ -78,7 +79,7 @@ model = ConceptNBMNary(
     num_subnets=num_subnets,
     dropout=dropout,
     bases_dropout=bases_dropout,
-    batchnorm=batchnorm
+    batchnorm=batchnorm,
 )
 
 # Use Mean Squared Error for regression
@@ -116,30 +117,40 @@ with torch.no_grad():
         total_loss += loss.item() * inputs.size(0)
     test_loss = total_loss / len(test_dataset)
 print(f"Test Loss: {test_loss:.4f}")
-#RMSE = sqrt(test_loss)
-print(f"RMSE: {test_loss**0.5:.4f}")    
-
+# RMSE = sqrt(test_loss)
+print(f"RMSE: {test_loss**0.5:.4f}")
 
 
 # Plot the shape functions of the model along with feature density
 
-device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+device = (
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps"
+    if torch.backends.mps.is_available()
+    else "cpu"
+)
 model.eval()
 model.to(device)
 
 feature_names = [
-    "MedInc", "HouseAge", "AveRooms", "AveBedrms", 
-    "Population", "AveOccup", "Latitude", "Longitude"
+    "MedInc",
+    "HouseAge",
+    "AveRooms",
+    "AveBedrms",
+    "Population",
+    "AveOccup",
+    "Latitude",
+    "Longitude",
 ]
 
 plot_nbm_shape_functions_with_feature_density(
     model,
-    X_test, 
+    X_test,
     feature_names=feature_names,
-    n_points=50,   # more points for a smoother curve
-    bins=50,        # more histogram bins
+    n_points=50,  # more points for a smoother curve
+    bins=50,  # more histogram bins
     device=device,
     plot_cols=4,
-    red_alpha=0.4
+    red_alpha=0.4,
 )
-

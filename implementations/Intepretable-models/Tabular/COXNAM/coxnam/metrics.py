@@ -3,7 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sksurv.metrics import cumulative_dynamic_auc
 
-def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, duration_test_tensor, event_train_tensor, event_test_tensor, epoch=None, plot=True):
+
+def compute_td_auc(
+    model,
+    X_train_tensor,
+    X_test_tensor,
+    duration_train_tensor,
+    duration_test_tensor,
+    event_train_tensor,
+    event_test_tensor,
+    epoch=None,
+    plot=True,
+):
     """
     Computes Time-Dependent AUC (TD-AUC) at multiple time points during model evaluation.
 
@@ -33,8 +44,14 @@ def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, 
     event_test = event_test_tensor.cpu().numpy()
 
     # Convert event & time into structured survival format
-    y_train = np.array([(e, t) for e, t in zip(event_train, duration_train)], dtype=[('event', bool), ('time', float)])
-    y_test = np.array([(e, t) for e, t in zip(event_test, duration_test)], dtype=[('event', bool), ('time', float)])
+    y_train = np.array(
+        [(e, t) for e, t in zip(event_train, duration_train)],
+        dtype=[("event", bool), ("time", float)],
+    )
+    y_test = np.array(
+        [(e, t) for e, t in zip(event_test, duration_test)],
+        dtype=[("event", bool), ("time", float)],
+    )
 
     # Ensure model is in evaluation mode
     model.eval()
@@ -44,10 +61,13 @@ def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, 
         risk_scores = model(X_test_tensor).detach().cpu().numpy().flatten()
 
     # Dynamically ensure time_grid stays within observed range
-    min_time = duration_test.min() + (duration_test.max() - duration_test.min()) * 0.01  # Slight buffer above min
-    max_time = duration_test.max() - (duration_test.max() - duration_test.min()) * 0.01  # Slight buffer below max
+    min_time = (
+        duration_test.min() + (duration_test.max() - duration_test.min()) * 0.01
+    )  # Slight buffer above min
+    max_time = (
+        duration_test.max() - (duration_test.max() - duration_test.min()) * 0.01
+    )  # Slight buffer below max
     time_grid = np.linspace(min_time, max_time, num=10)
-
 
     # Compute TD-AUC
     td_auc, mean_auc = cumulative_dynamic_auc(y_train, y_test, risk_scores, time_grid)
@@ -59,7 +79,9 @@ def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, 
     # Plot TD-AUC over time
     if plot:
         plt.figure(figsize=(10, 5))
-        plt.plot(time_grid, td_auc, marker="o", linestyle="-", label="Time-Dependent AUC")
+        plt.plot(
+            time_grid, td_auc, marker="o", linestyle="-", label="Time-Dependent AUC"
+        )
         plt.xlabel("Time (Days)")
         plt.ylabel("AUC")
         plt.title("Time-Dependent AUC (TD-AUC) Over Time")
@@ -69,10 +91,13 @@ def compute_td_auc(model, X_train_tensor, X_test_tensor, duration_train_tensor, 
 
     return np.mean(td_auc)
 
-def compute_td_concordance_index(model, X, durations, events, time_point, time_grid, H0):
+
+def compute_td_concordance_index(
+    model, X, durations, events, time_point, time_grid, H0
+):
     """
     Optimized version of time-dependent concordance index (TD-CI).
-    
+
     Uses NumPy vectorization instead of nested loops for efficiency.
 
     Args:
@@ -91,24 +116,32 @@ def compute_td_concordance_index(model, X, durations, events, time_point, time_g
     model.eval()
     with torch.no_grad():
         risk_scores = model(X).cpu().numpy().flatten()
-    
+
     # Interpolate to get the cumulative hazard at time_point
     H0_t = np.interp(time_point, time_grid, H0)
-    
+
     # Compute survival probabilities: S(t|x) = exp(-H0(t) * exp(h(x)))
     S_pred = np.exp(-H0_t * np.exp(risk_scores))
 
     # Convert durations & events to numpy if they are tensors
-    durations = durations.cpu().numpy().flatten() if isinstance(durations, torch.Tensor) else np.array(durations).flatten()
-    events = events.cpu().numpy().flatten() if isinstance(events, torch.Tensor) else np.array(events).flatten()
+    durations = (
+        durations.cpu().numpy().flatten()
+        if isinstance(durations, torch.Tensor)
+        else np.array(durations).flatten()
+    )
+    events = (
+        events.cpu().numpy().flatten()
+        if isinstance(events, torch.Tensor)
+        else np.array(events).flatten()
+    )
 
     # Select only individuals with observed events before time_point
     event_mask = (events == 1) & (durations <= time_point)
-    
+
     if np.sum(event_mask) == 0:
         print("No comparable pairs found for the specified time_point.")
         return None
-    
+
     event_times = durations[event_mask]
     survival_probs_event = S_pred[event_mask]
 
@@ -118,18 +151,24 @@ def compute_td_concordance_index(model, X, durations, events, time_point, time_g
     survival_probs_event = survival_probs_event[sorted_indices]
 
     # Select only individuals who have not yet experienced the event
-    risk_mask = durations > np.expand_dims(event_times, axis=1)  # Compare each event time to all other durations
+    risk_mask = durations > np.expand_dims(
+        event_times, axis=1
+    )  # Compare each event time to all other durations
     num_comparable = np.sum(risk_mask, axis=1)
 
     if np.sum(num_comparable) == 0:
         return None  # No valid comparisons
 
     # Get the survival probabilities for those at risk
-    survival_probs_risk = S_pred[np.newaxis, :] * risk_mask  # Masked array where survival probabilities exist only for those at risk
+    survival_probs_risk = (
+        S_pred[np.newaxis, :] * risk_mask
+    )  # Masked array where survival probabilities exist only for those at risk
 
     # Compare survival probabilities
-    correct_order = (survival_probs_event[:, np.newaxis] < survival_probs_risk)  # Lower survival probability = higher risk
-    tie_cases = (survival_probs_event[:, np.newaxis] == survival_probs_risk)
+    correct_order = (
+        survival_probs_event[:, np.newaxis] < survival_probs_risk
+    )  # Lower survival probability = higher risk
+    tie_cases = survival_probs_event[:, np.newaxis] == survival_probs_risk
 
     # Count correct pairs
     num_correct = np.sum(correct_order, axis=1) + 0.5 * np.sum(tie_cases, axis=1)

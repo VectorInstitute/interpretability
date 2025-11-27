@@ -6,11 +6,11 @@ Note that if you want to use the pretrained model weights,
 then please keep in mind that the outputs might be different from the original implementation
 as this uses some slightly different ops than with which the weights were trained.
 
-ResNet-50 implementation modified for B-cos from 
+ResNet-50 implementation modified for B-cos from
 Modified from https://github.com/pytorch/vision/blob/0504df5ddf9431909130e7788faf05446bb8a2/torchvision/models/resnet.py
 """
+
 import contextlib
-import functools
 import math
 from typing import Any, List, Optional, Type, Union
 import os
@@ -353,6 +353,7 @@ class BcosResNet(nn.Module):
             if hasattr(m, "set_explanation_mode"):
                 m.set_explanation_mode(False)
 
+
 def _resnet(
     arch: str,
     block: Type[Union[BasicBlock, Bottleneck]],
@@ -366,9 +367,9 @@ def _resnet(
     if pretrained:
         # 1. Construct local file path
         local_dir = os.path.join(
-            os.path.dirname(__file__),
-            "../models/pretrained_weights")
-        
+            os.path.dirname(__file__), "../models/pretrained_weights"
+        )
+
         url = URLS[arch]  # e.g. "https://.../resnet_50-ead259efe4.pth"
         filename = os.path.basename(url)  # "resnet_50-ead259efe4.pth"
 
@@ -382,11 +383,14 @@ def _resnet(
         else:
             # 3. Otherwise, download from URL
             print(f"Local checkpoint not found. Downloading from {URLS[arch]}")
-            state_dict = torch.hub.load_state_dict_from_url(URLS[arch], progress=progress)
-        
+            state_dict = torch.hub.load_state_dict_from_url(
+                URLS[arch], progress=progress
+            )
+
         # Load with changed keys if necessary
         model.load_state_dict(state_dict)
     return model
+
 
 # ---------------------
 # ResNets for ImageNet

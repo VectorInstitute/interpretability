@@ -1,9 +1,18 @@
 import torch
 
-def cox_loss(risk_scores, duration, event, model, l2_lambda=0.01, l1_lambda=0.01, mini_batch_indices=None):
+
+def cox_loss(
+    risk_scores,
+    duration,
+    event,
+    model,
+    l2_lambda=0.01,
+    l1_lambda=0.01,
+    mini_batch_indices=None,
+):
     """
     Compute the Cox loss with L2 and L1 regularization, using observed events sorted by descending duration.
-    
+
     Parameters:
         risk_scores (Tensor): Model output (log hazards).
         duration (Tensor): Survival times.
@@ -12,7 +21,7 @@ def cox_loss(risk_scores, duration, event, model, l2_lambda=0.01, l1_lambda=0.01
         l2_lambda (float): L2 regularization strength.
         l1_lambda (float): L1 regularization strength.
         mini_batch_indices (Tensor, optional): Indices for mini-batch sampling.
-    
+
     Returns:
         Tensor: Computed loss value.
     """
@@ -27,7 +36,7 @@ def cox_loss(risk_scores, duration, event, model, l2_lambda=0.01, l1_lambda=0.01
         event = event[mini_batch_indices]
 
     # Filter to include only observed events.
-    observed_mask = (event == 1)
+    observed_mask = event == 1
     risk_scores_obs = risk_scores[observed_mask]
     duration_obs = duration[observed_mask]
 
@@ -47,7 +56,7 @@ def cox_loss(risk_scores, duration, event, model, l2_lambda=0.01, l1_lambda=0.01
     log_likelihood = torch.sum(sorted_risk_scores - torch.log(cumsum_exp_risk_scores))
 
     # Compute regularization penalties.
-    l2_penalty = sum(torch.sum(param ** 2) for param in model.parameters())
+    l2_penalty = sum(torch.sum(param**2) for param in model.parameters())
     l1_penalty = sum(torch.sum(torch.abs(param)) for param in model.parameters())
 
     # Final loss: negative log-likelihood with regularization.

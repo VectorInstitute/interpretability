@@ -1,15 +1,15 @@
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
+
 
 # ---------------------------
 # Plot Shape Functions for Interpretability
 # ---------------------------
-def plot_shape_functions_and_distributions(model: torch.nn.Module,
-                                           X: np.ndarray,
-                                           feature_names: list):
-    """ Plot the shape functions and feature distributions for interpretability
+def plot_shape_functions_and_distributions(
+    model: torch.nn.Module, X: np.ndarray, feature_names: list
+):
+    """Plot the shape functions and feature distributions for interpretability
     Parameters:
         model (torch.nn.Module): Trained CoxNAM model
         X (np.ndarray): Training set features
@@ -43,35 +43,37 @@ def plot_shape_functions_and_distributions(model: torch.nn.Module,
         orig_sample_inputs = sample_inputs * feature_std + feature_mean
 
         # Plot histogram
-        ax.hist(feature_values, bins=30, alpha=0.7, color='b', density=True)
+        ax.hist(feature_values, bins=30, alpha=0.7, color="b", density=True)
 
         # Plot shape function
         ax2 = ax.twinx()
-        ax2.plot(orig_sample_inputs, shape_values, color='r')
+        ax2.plot(orig_sample_inputs, shape_values, color="r")
 
-        ax.set_xlabel('Feature Value', fontsize=8)
-        ax.set_ylabel('Density', fontsize=8)
-        ax2.set_ylabel('Shape Function', fontsize=8)
+        ax.set_xlabel("Feature Value", fontsize=8)
+        ax.set_ylabel("Density", fontsize=8)
+        ax2.set_ylabel("Shape Function", fontsize=8)
         ax.set_title(feature_names[i], fontsize=10)
-        ax.tick_params(axis='both', which='major', labelsize=8)
+        ax.tick_params(axis="both", which="major", labelsize=8)
         ax.grid(True)
 
     # Hide any unused subplots
     for j in range(num_features, len(axes)):
-        axes[j].axis('off')
+        axes[j].axis("off")
 
-    handles = [plt.Line2D([0], [0], color='b', lw=3, label='Distribution'),
-               plt.Line2D([0], [0], color='r', lw=3, label='Shape Function')]
+    handles = [
+        plt.Line2D([0], [0], color="b", lw=3, label="Distribution"),
+        plt.Line2D([0], [0], color="r", lw=3, label="Shape Function"),
+    ]
 
-    fig.legend(handles=handles, loc='upper center', ncol=2, fontsize=8)
+    fig.legend(handles=handles, loc="upper center", ncol=2, fontsize=8)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    
+
     # Save the figure
-    plt.savefig('framingham_shape_functions.png', dpi=300)
+    plt.savefig("framingham_shape_functions.png", dpi=300)
     plt.show()
 
-def plot_baseline_survival(time_grid,
-                            S0):
+
+def plot_baseline_survival(time_grid, S0):
     """
     Plot the baseline survival function and cumulative hazard.
     Parameters:
@@ -94,8 +96,8 @@ def plot_baseline_survival(time_grid,
     plt.close()
     print("Baseline survival plot saved to baseline_survival_function.png")
 
-def plot_survival_curve(survival_probs,
-                        time_grid):
+
+def plot_survival_curve(survival_probs, time_grid):
     """
     Plot survival curves for test samples.
     Parameters:
@@ -107,7 +109,9 @@ def plot_survival_curve(survival_probs,
     # For example, plot survival curves for the first 5 test samples:
     plt.figure(figsize=(8, 6))
     for i in range(min(5, survival_probs.shape[0])):
-        plt.step(time_grid, survival_probs[i, :], where="post", label=f"Test sample {i+1}")
+        plt.step(
+            time_grid, survival_probs[i, :], where="post", label=f"Test sample {i+1}"
+        )
     plt.xlabel("Time")
     plt.ylabel("Survival Probability S(t|x)")
     plt.title("Survival Curves for Test Samples")

@@ -5,6 +5,7 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 class ISICDataset(Dataset):
     """
     A custom dataset class for the ISIC skin lesion dataset.
@@ -27,6 +28,7 @@ class ISICDataset(Dataset):
         __len__(): Returns the number of samples in the dataset.
         __getitem__(idx): Returns the sample (image and label) at the given index.
     """
+
     def __init__(self, root_dir: str, csv_file: str, transform=None, extension=".jpg"):
         self.root_dir = root_dir
         self.csv_file = csv_file
@@ -52,7 +54,9 @@ class ISICDataset(Dataset):
 
         # Ensure we have data
         if not self.samples:
-            raise ValueError(f"Dataset at {csv_file} is empty or incorrectly formatted!")
+            raise ValueError(
+                f"Dataset at {csv_file} is empty or incorrectly formatted!"
+            )
 
         # Label encoding
         self.label_to_index = {"benign": 0, "malignant": 1}
@@ -65,7 +69,9 @@ class ISICDataset(Dataset):
 
         # Ensure label exists in dictionary
         if label not in self.label_to_index:
-            raise ValueError(f"Unknown label '{label}' in dataset! Check CSV formatting.")
+            raise ValueError(
+                f"Unknown label '{label}' in dataset! Check CSV formatting."
+            )
 
         img_path = os.path.join(self.root_dir, image_name + self.extension)
         image = Image.open(img_path).convert("RGB")  # Open image as RGB

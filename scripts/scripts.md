@@ -1,4 +1,4 @@
-This file contains instructions to submit a `SLURM` job for training models. They allocate GPUs for running scripts and run them. 
+This file contains instructions to submit a `SLURM` job for training models. They allocate GPUs for running scripts and run them.
 
 ## Steps to run job
 
@@ -33,11 +33,9 @@ sbatch train_nam.sh
 - `.out` file containing output of the script being run
 - `.err` file containing any errors thrown by the script.
 
-You can use the following commands to view the output - 
+You can use the following commands to view the output -
 - `tail -f filename.out`
 - `cat filename.err`
 
 2. To view the status of the slurm job:
 `squeue --me`
-
-

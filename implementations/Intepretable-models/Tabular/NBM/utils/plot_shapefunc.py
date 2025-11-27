@@ -66,10 +66,7 @@ def plot_nbm_shape_functions_with_feature_density(
 
     # Use constrained_layout so each subplot cell has the same size
     fig, axes = plt.subplots(
-        nrows=nrows,
-        ncols=ncols,
-        figsize=figsize,
-        constrained_layout=True
+        nrows=nrows, ncols=ncols, figsize=figsize, constrained_layout=True
     )
 
     # Flatten axes in case there's only one row or one column
@@ -95,11 +92,13 @@ def plot_nbm_shape_functions_with_feature_density(
             ice_curves.append(preds.cpu().numpy().flatten())
 
         ice_curves = np.array(ice_curves)  # shape (n_samples, n_points)
-        pdp = ice_curves.mean(axis=0)      # partial dependence is mean over samples
+        pdp = ice_curves.mean(axis=0)  # partial dependence is mean over samples
 
         # 3) Build the vertical red shading from a 1D histogram of X[:, j]
         feature_values = X[:, j].cpu().numpy()
-        hist, bin_edges = np.histogram(feature_values, bins=bins, range=(xj_min, xj_max))
+        hist, bin_edges = np.histogram(
+            feature_values, bins=bins, range=(xj_min, xj_max)
+        )
         hist = hist.astype(float)
         if hist.max() > 0:
             hist /= hist.max()  # normalize to [0, 1]
@@ -138,18 +137,13 @@ def plot_nbm_shape_functions_with_feature_density(
         axes[k].axis("off")
 
     plt.show()
-    
-    
-    
+
+
 # use permutation_importance and plot_feature_importance functions to plot feature importance
 
+
 def permutation_importance(
-    model,
-    X,
-    y,
-    metric=mean_squared_error,
-    n_repeats=5,
-    random_state=42
+    model, X, y, metric=mean_squared_error, n_repeats=5, random_state=42
 ):
     """
     Compute permutation feature importance for a regression model using MSE drop.
@@ -213,7 +207,7 @@ def permutation_importance(
             # Compute the drop in performance (for MSE, bigger = more important)
             score_drop = perm_score - baseline_score
             importances[j] += score_drop
-            importances_sq[j] += score_drop ** 2
+            importances_sq[j] += score_drop**2
 
     # Average over repeats
     importances /= float(n_repeats)
@@ -242,8 +236,10 @@ def plot_feature_importance(importances, importances_std, feature_names=None):
     sorted_std = importances_std[idx_sorted]
 
     plt.figure(figsize=(8, 5))
-    plt.bar(range(len(importances)), sorted_importances, yerr=sorted_std, align='center')
-    plt.xticks(range(len(importances)), sorted_names, rotation=45, ha='right')
+    plt.bar(
+        range(len(importances)), sorted_importances, yerr=sorted_std, align="center"
+    )
+    plt.xticks(range(len(importances)), sorted_names, rotation=45, ha="right")
     plt.ylabel("Importance (Performance Drop)")
     plt.title("Permutation Feature Importance")
     plt.tight_layout()

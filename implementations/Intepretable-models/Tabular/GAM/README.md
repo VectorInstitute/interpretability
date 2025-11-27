@@ -3,7 +3,7 @@ A Generalized Additive Model (GAM) is a type of statistical model that combines 
 
 ## Resources
 - [gam-jupyter](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/gam-jupyter.ipynb) notebook focuses on Generalized Additive Models (GAM), a powerful method for binary classification for Adult dataset.
-- [gam-regression](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/gam-regression.ipynb) contains an exmaple of using GAMs to predict medical costs.  
+- [gam-regression](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/gam-regression.ipynb) contains an exmaple of using GAMs to predict medical costs.
 - [GAM-regression.py](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/GAM-regression.py) is a python script of the Jupyter notebook.
 - [label_encoders.pkl](https://github.com/VectorInstitute/interpretability-bootcamp/blob/main/reference_implementations/Intepretable-models/Tabular/GAM/label_encoders.pkl) is used for data preprocessing to convert categorical variables to integers.
 

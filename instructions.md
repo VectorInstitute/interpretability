@@ -86,7 +86,7 @@ source .venv/bin/activate
 python ~/interpretability-bootcamp/reference_implementations/Intepretable-models/Imaging/B-Cos/isic_explain.py
 ```
 
-4. Create a jupyter kernel 
+4. Create a jupyter kernel
 
 if env created via `pip`
 ```bash
@@ -110,7 +110,7 @@ deactivate
 source interp_bootcamp/bin/activate
 ```
 
-or 
+or
 
 ```bash
 source .venv/bin/activate
@@ -122,5 +122,3 @@ jupyter notebook
 ```
 
 6. Change kernel in the jupyter notebook to `interp_bootcamp` and run it.
-
-
